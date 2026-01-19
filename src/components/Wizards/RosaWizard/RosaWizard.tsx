@@ -70,6 +70,8 @@ export const RosaWizard = (props: RosaWizardProps) => {
       autoscaling: false,
       nodes_compute: 2,
       upgrade_policy: 'automatic',
+      upgrade_day: 0,
+      upgrade_time: 0,
       cluster_privacy: 'external',
     },
   };

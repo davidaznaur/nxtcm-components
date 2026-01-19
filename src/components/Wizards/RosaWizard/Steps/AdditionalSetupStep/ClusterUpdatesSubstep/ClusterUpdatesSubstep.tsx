@@ -1,9 +1,69 @@
-import { Section, WizRadioGroup, Radio } from '@patternfly-labs/react-form-wizard';
+import { Section, WizRadioGroup, Radio, WizSelect } from '@patternfly-labs/react-form-wizard';
 import { Content, ContentVariants } from '@patternfly/react-core';
 import { useTranslation } from '../../../../../../context/TranslationContext';
+import React from 'react';
+import { useInput } from '@patternfly-labs/react-form-wizard/inputs/Input';
 
-export const ClusterUpdatesSubstep = () => {
+export const ClusterUpdatesSubstep = (props: any) => {
   const { t } = useTranslation();
+  const { value } = useInput(props);
+  const { cluster } = value;
+
+  const generateHourlyTimesUTC = () => {
+    const times = [];
+    // Start loop from hour 0 (00:00) up to (but not including) hour 24
+    for (let hour = 0; hour < 24; hour++) {
+      // Format the hour with leading zero if less than 10
+      const formattedHour = hour.toString().padStart(2, '0');
+      // Add the time string to the array
+      times.push(`${formattedHour}:00 UTC`);
+    }
+    return times;
+  };
+
+  const weekDays = [
+    { label: 'Sunday', value: 0 },
+    { label: 'Monday', value: 1 },
+    { label: 'Tuesday', value: 2 },
+    { label: 'Wednesday', value: 3 },
+    { label: 'Thursday', value: 4 },
+    { label: 'Friday', value: 5 },
+    { label: 'Saturday', value: 6 },
+  ];
+
+  const onDaySelect = (selection: number | string | undefined) => {
+    const selectedHour = cluster?.upgrade_time;
+    /* cron syntax:
+      00 =  0th minute,
+      ${}   selected hour (from current input value)
+      * * = disregarding the day of month, every month
+      ${}   newly selected day number
+    */
+    cluster.schedule = `00 ${selectedHour} * * ${selection}`;
+  };
+
+  const onHourSelect = (selection: number | string | undefined) => {
+    const selectedDay = cluster.upgrade_day?.value;
+    /* cron syntax:
+      00 =  0th minute,
+      ${}   newly selected hour
+      * * = disregarding the day of month, every month
+      ${}   selected day number (from current input value)
+    */
+    cluster.schedule = `00 ${selection} * * ${selectedDay}`;
+  };
+
+  React.useEffect(() => {
+    const dayTimeArr = [cluster.upgrade_day, cluster.upgrade_time];
+    onHourSelect(dayTimeArr[1]);
+    onDaySelect(dayTimeArr[0]);
+
+    if (cluster.upgrade_policy === 'automatic') {
+      cluster.upgrade_day = 0;
+      cluster.upgrade_time = 0;
+    }
+  });
+
   return (
     <Section
       id="cluster-updates-substep-section"
@@ -32,7 +92,7 @@ export const ClusterUpdatesSubstep = () => {
           description={t(
             'Schedule each update individually. When planning updates, make sure to consider the end of life dates from the {HERE GOES LINK WITH EXTERNAL ICON: lifecycle policy'
           )}
-        />
+        ></Radio>
         <Radio
           id="cluster-upgrade-strategy-recurring-radio-btn"
           label={t('Recurring updates')}
@@ -40,7 +100,29 @@ export const ClusterUpdatesSubstep = () => {
           description={t(
             "The cluster control plan will be automatically updated based on your preferred day and start time when new patch updates ({HERE GOES LINK WITH EXTERNAL ICON: z-stream}) are available. When a new minor version is available, you'll be notified and must manually allow the cluster to update the next minor version. The compute nodes will need to be manually updated."
           )}
-        />
+        >
+          <WizSelect
+            label={t('DAY')}
+            path="cluster.upgrade_day"
+            options={weekDays?.map((weekday: { label: string; value: number }) => {
+              return {
+                label: weekday.label,
+                value: weekday.value,
+              };
+            })}
+          />
+
+          <WizSelect
+            label={t('TIME')}
+            path="cluster.upgrade_time"
+            options={generateHourlyTimesUTC().map((time: string, idx: number) => {
+              return {
+                label: time,
+                value: idx,
+              };
+            })}
+          />
+        </Radio>
       </WizRadioGroup>
     </Section>
   );
