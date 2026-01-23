@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { DashboardGrid, GridItem } from './Dahsboard';
 import { BarChart } from './widgets/BarChart';
+import { DonutChart } from './widgets/DonutChart';
+import { PieChart } from './widgets/PieChart';
+import { CVECard, CVEData } from '../dashboard/CVECard';
+import { Card, CardBody, CardTitle } from '@patternfly/react-core';
+import { AreaChart } from './widgets/AreaChart';
 
 // Mock layout with space for chart widget
 const mockLayout: GridItem[] = [
@@ -8,8 +13,12 @@ const mockLayout: GridItem[] = [
   { i: 'revenue', x: 3, y: 0, w: 3, h: 2 },
   { i: 'orders', x: 6, y: 0, w: 3, h: 2 },
   { i: 'errors', x: 9, y: 0, w: 3, h: 2 },
-  { i: 'chart', x: 0, y: 2, w: 6, h: 6, minW: 4 },
-  { i: 'activity', x: 6, y: 2, w: 6, h: 6 },
+  { i: 'chart', x: 0, y: 2, w: 6, h: 6, minW: 6, minH: 6 },
+  { i: 'donutchart', x: 0, y: 2, w: 6, h: 6, minW: 6, minH: 6 },
+  { i: 'piechart', x: 12, y: 4, w: 6, h: 6, minW: 6, minH: 6 },
+  { i: 'activity', x: 6, y: 2, w: 6, h: 6, minW: 6, minH: 6 },
+  { i: 'cveCard', x: 6, y: 2, w: 6, h: 6, minW: 6, minH: 6 },
+  { i: 'areaChart', x: 6, y: 2, w: 6, h: 6, minW: 6, minH: 6 },
 ];
 
 // Metric tile component
@@ -75,6 +84,23 @@ const meta: Meta<typeof DashboardGrid> = {
   },
 };
 
+const defaultCVEData: CVEData[] = [
+  {
+    severity: 'critical',
+    count: 24,
+    label: 'Critical severity CVEs on your associated',
+    onViewClick: () => console.log('View critical CVEs clicked'),
+    viewLinkText: 'View critical CVEs',
+  },
+  {
+    severity: 'important',
+    count: 147,
+    label: 'Important severity CVEs on your associated',
+    onViewClick: () => console.log('View important CVEs clicked'),
+    viewLinkText: 'View important CVEs',
+  },
+];
+
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -109,9 +135,40 @@ export const Playground: Story = {
           <BarChart />
         </div>
       </div>
+      <div
+        key="donutchart"
+        className="testclassname"
+        style={{ background: 'white', padding: '16px', border: '1px solid #e2e8f0' }}
+      >
+        <div style={{ height: '100%', width: '100%' }}>
+          <DonutChart />
+        </div>
+      </div>
+
+      <div
+        key="piechart"
+        className="testclassname"
+        style={{ background: 'white', padding: '16px', border: '1px solid #e2e8f0' }}
+      >
+        <div style={{ height: '100%', width: '100%' }}>
+          <PieChart />
+        </div>
+      </div>
+
       <div key="activity">
         <ActivityFeed />
       </div>
+
+      <div key="areaChart">
+        <AreaChart />
+      </div>
+
+      <Card key="cveCard">
+        <CardTitle>CVE Card</CardTitle>
+        <CardBody>
+          <CVECard cveData={defaultCVEData} />
+        </CardBody>
+      </Card>
     </DashboardGrid>
   ),
 };

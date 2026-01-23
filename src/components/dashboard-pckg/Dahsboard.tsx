@@ -4,8 +4,8 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import '@patternfly/patternfly/patternfly-charts.css';
 
-import ReactGridLayout, { useContainerWidth } from 'react-grid-layout';
-import { BarChart } from './widgets/BarChart';
+import ReactGridLayout, { Layout, useContainerWidth } from 'react-grid-layout';
+import { Button, Checkbox } from '@patternfly/react-core';
 
 export interface GridItem {
   /** Unique identifier for the grid item */
@@ -38,7 +38,7 @@ export interface DashboardGridProps {
   /** Height of a single row in pixels */
   rowHeight?: number;
   /** Children to render in the grid (must have key prop matching layout item's i) */
-  children?: React.ReactNode;
+  children?: React.ReactNode[];
 }
 
 const defaultLayout: GridItem[] = [
@@ -66,30 +66,86 @@ export function DashboardGrid({
 }: DashboardGridProps) {
   const { width, containerRef, mounted } = useContainerWidth();
 
-  const defaultChildren = (
-    <>
-      <div key="chart">
-        <BarChart />
-      </div>
+  const [currentLayout, setCurrentLayout] = React.useState<Layout>(layout);
+  // 1. Store ONLY the IDs of the items we want to show
+  // We initialize it with all the IDs from the layout prop
+  const [visibleKeys, setVisibleKeys] = React.useState<string[]>(layout.map((item) => item.i));
 
-      <div
-        key="a"
-        style={{ background: '#f0f0f0', border: '1px solid #ccc', padding: '8px' }}
-      ></div>
-      <div key="b" style={{ background: '#e8f4f8', border: '1px solid #0066cc', padding: '8px' }}>
-        Panel B (Resizable)
-      </div>
-      <div key="c" style={{ background: '#f0f8e8', border: '1px solid #00cc66', padding: '8px' }}>
-        Panel C
-      </div>
-    </>
+  const onLayoutChange = (newLayout: Layout) => {
+    // We update currentLayout, but we must be careful:
+    // RGL only sends the VISIBLE items in 'newLayout'.
+    // We merge them back into currentLayout to preserve hidden items' positions.
+    setCurrentLayout((prev) => {
+      const updated = prev.map((oldItem) => {
+        const match = newLayout.find((n) => n.i === oldItem.i);
+        return match ? { ...oldItem, ...match } : oldItem;
+      });
+      return updated;
+    });
+  };
+
+  // 2. Handle the toggle logic
+  const handleCheckboxChange = (
+    _event: React.FormEvent<HTMLInputElement>,
+    checked: boolean,
+    id: string
+  ) => {
+    if (checked) {
+      setVisibleKeys((prev) => [...prev, id]);
+    } else {
+      setVisibleKeys((prev) => prev.filter((key) => key !== id));
+    }
+  };
+
+  // 3. Filter layout and children based on visibleKeys
+  // useMemo ensures we don't recalculate this unless keys or layout change
+  const filteredLayout = React.useMemo(
+    () => currentLayout.filter((item) => visibleKeys.includes(item.i)),
+    [currentLayout, visibleKeys]
   );
+
+  const filteredChildren = React.useMemo(
+    () => children?.filter((child: any) => visibleKeys.includes(child.key)),
+    [children, visibleKeys]
+  );
+
+  const saveLayout = () => {
+    localStorage.setItem('layout', JSON.stringify(filteredLayout));
+    localStorage.setItem('keys', JSON.stringify(visibleKeys));
+  };
+
+  const loadLayout = () => {
+    const savedLayout = localStorage.getItem('layout');
+    const savedKeys = localStorage.getItem('keys');
+    if (savedLayout && savedKeys) {
+      setCurrentLayout(JSON.parse(savedLayout));
+      setVisibleKeys(JSON.parse(savedKeys));
+    }
+  };
 
   return (
     <div ref={containerRef} style={{ width: '100%' }}>
+      {children?.map((child: any) => (
+        <Checkbox
+          key={child.key}
+          id={child.key}
+          label={`Show ${child.key}`}
+          // 4. Tell the checkbox if it should look checked
+          isChecked={visibleKeys.includes(child.key)}
+          onChange={(event, checked) => handleCheckboxChange(event, checked, child.key)}
+        />
+      ))}
+      <Button onClick={saveLayout}>Save layout</Button>
+
+      <Button onClick={loadLayout}>Load layout</Button>
       {mounted && (
-        <ReactGridLayout layout={layout} width={width} gridConfig={{ cols, rowHeight }}>
-          {children || defaultChildren}
+        <ReactGridLayout
+          onLayoutChange={onLayoutChange}
+          layout={filteredLayout}
+          width={width}
+          gridConfig={{ cols, rowHeight }}
+        >
+          {filteredChildren}
         </ReactGridLayout>
       )}
     </div>
