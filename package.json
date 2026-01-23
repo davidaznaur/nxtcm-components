@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "@patternfly/patternfly": "^6.4.0",
+    "@patternfly/react-charts": "^8.4.0",
     "@patternfly/react-component-groups": "^6.3.0",
     "@patternfly/react-icons": "^6.3.1",
     "@patternfly/react-styles": "^6.4.0",
@@ -69,7 +70,9 @@
     "js-yaml": "^4.1.0",
     "progress": "^2.0.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-grid-layout": "^2.2.2",
+    "victory": "^37.3.6"
   },
   "devDependencies": {
     "@babel/core": "^7.22.10",
