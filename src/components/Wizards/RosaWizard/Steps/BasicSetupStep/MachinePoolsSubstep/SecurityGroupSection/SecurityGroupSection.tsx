@@ -5,13 +5,16 @@ import { useValue } from '@patternfly-labs/react-form-wizard/inputs/Input';
 import EditSecurityGroups from './EditSecurityGroups';
 import SecurityGroupsEmptyAlert from './SecurityGroupsEmptyAlert';
 import SecurityGroupsNoEditAlert from './SecurityGroupsNoEditAlert';
+import { showSecurityGroupsSection } from '../../../../helpers';
 import { CloudVpc } from '../../../../../types';
 
 export const SecurityGroupsSection = ({
   selectedVPC,
+  clusterVersion,
   refreshVPCs,
 }: {
   selectedVPC: CloudVpc | undefined;
+  clusterVersion: string;
   refreshVPCs?: () => void;
 }) => {
   const [selectedGroupIds, setSelectedGroupIds] = useValue(
@@ -20,6 +23,7 @@ export const SecurityGroupsSection = ({
   );
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const incompatibleClusterVersion = !showSecurityGroupsSection(clusterVersion);
 
   const prevVpcId = useRef(selectedVPC?.id);
   useEffect(() => {
@@ -34,6 +38,7 @@ export const SecurityGroupsSection = ({
   }
 
   const showEmptyAlert = (selectedVPC?.aws_security_groups || []).length === 0;
+  const incompatibleClusterVersionMessage = `To use securityGroups, your cluster must be version 4.14.x or newer.`;
 
   return (
     <ExpandableSection
@@ -42,8 +47,9 @@ export const SecurityGroupsSection = ({
       isIndented
       onToggle={() => setIsExpanded(!isExpanded)}
     >
+      {incompatibleClusterVersion && <div>{incompatibleClusterVersionMessage}</div>}
       {showEmptyAlert && <SecurityGroupsEmptyAlert refreshVPCCallback={refreshVPCs} />}
-      {!showEmptyAlert && (
+      {!incompatibleClusterVersion && !showEmptyAlert && (
         <>
           <EditSecurityGroups
             selectedVPC={selectedVPC}

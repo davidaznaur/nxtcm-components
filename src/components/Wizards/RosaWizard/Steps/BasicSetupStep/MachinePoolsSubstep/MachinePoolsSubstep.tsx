@@ -16,7 +16,7 @@ import {
   GridItem,
 } from '@patternfly/react-core';
 import { useTranslation } from '../../../../../../context/TranslationContext';
-import { subnetsFilter } from '../../../helpers';
+import { subnetsFilter, canSelectImds, getWorkerNodeVolumeSizeMaxGiB } from '../../../helpers';
 import {
   MachineTypesDropdownType,
   Resource,
@@ -33,33 +33,31 @@ import { SecurityGroupsSection } from './SecurityGroupSection/SecurityGroupSecti
 
 type MachinePoolsSubstepProps = {
   vpcList: Resource<VPC[]>;
-  machineTypes: Resource<MachineTypesDropdownType[]>;
+  machineTypes: Resource<MachineTypesDropdownType[], [region: string]> & {
+    fetch?: (region: string) => Promise<void>;
+  };
 };
 
 export const MachinePoolsSubstep = (props: MachinePoolsSubstepProps) => {
   const { t } = useTranslation();
   const { cluster } = useItem<RosaWizardFormData>();
   const currentRegion = cluster?.region;
+  const maxRootDiskSize = getWorkerNodeVolumeSizeMaxGiB(cluster.cluster_version);
 
+  // Resets cluster_privacy_public_subnet_id when user selects private and refetch regions with the selected region
   React.useEffect(() => {
-    if (props.machineTypes.fetch) {
-      void props.machineTypes.fetch();
+    if (cluster?.cluster_privacy === 'internal') {
+      cluster.cluster_privacy_public_subnet_id = '';
     }
-  }, [currentRegion, props.machineTypes]);
+    if (props.machineTypes.fetch) void props.machineTypes.fetch(currentRegion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const vpcRef = cluster?.selected_vpc;
   const selectedVPC =
     typeof vpcRef === 'string' ? props.vpcList.data.find((vpc: VPC) => vpc.id === vpcRef) : vpcRef;
 
   const { privateSubnets } = subnetsFilter(selectedVPC);
-
-  // Resets cluster_privacy_public_subnet_id when user selects private
-  React.useEffect(() => {
-    if (cluster?.cluster_privacy === 'internal') {
-      cluster.cluster_privacy_public_subnet_id = '';
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <>
@@ -156,6 +154,7 @@ export const MachinePoolsSubstep = (props: MachinePoolsSubstepProps) => {
       <ExpandableSection toggleText="Advanced machine pool configuration (optional)">
         <Indented>
           <WizRadioGroup
+            disabled={!canSelectImds(cluster.cluster_version)}
             labelHelpTitle="Amazon EC2 Instance Metadata Service (IMDS)"
             labelHelp={
               <>
@@ -194,12 +193,13 @@ export const MachinePoolsSubstep = (props: MachinePoolsSubstepProps) => {
               'Root disks are AWS EBS volumes attached as the primary disk for AWS EC2 instances. The root disk size for this machine pool group of nodes must be between 75GiB and 16384GiB.'
             )}
             min={75}
-            max={16384}
-            validation={validateRootDiskSize}
+            max={maxRootDiskSize}
+            validation={(_value: number) => validateRootDiskSize(_value, maxRootDiskSize)}
           />
         </Indented>
       </ExpandableSection>
       <SecurityGroupsSection
+        clusterVersion={cluster.cluster_version}
         selectedVPC={selectedVPC}
         refreshVPCs={props.vpcList.fetch ? () => void props.vpcList.fetch?.() : undefined}
       />

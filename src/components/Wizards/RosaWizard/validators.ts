@@ -535,7 +535,10 @@ export const validateComputeNodes = (value: number | undefined): string | undefi
   return validatePositiveInteger(value);
 };
 
-export const validateRootDiskSize = (value: number | undefined): string | undefined => {
+export const validateRootDiskSize = (
+  value: number | undefined,
+  maxRootDiskSize: number
+): string | undefined => {
   if (value === undefined || value === null) {
     return undefined;
   }
@@ -545,8 +548,8 @@ export const validateRootDiskSize = (value: number | undefined): string | undefi
   if (value < 75) {
     return 'Root disk size must be at least 75 GiB.';
   }
-  if (value > 16384) {
-    return 'Root disk size must not exceed 16384 GiB.';
+  if (value > maxRootDiskSize) {
+    return `Root disk size must not exceed ${maxRootDiskSize} GiB.`;
   }
   return undefined;
 };

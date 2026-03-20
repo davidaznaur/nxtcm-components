@@ -2,24 +2,37 @@ import { Section, WizSelect, WizTextInput, useItem } from '@patternfly-labs/reac
 import { Button, Grid, GridItem, Stack, StackItem } from '@patternfly/react-core';
 import React from 'react';
 import { StepDrawer } from '../../../common/StepDrawer';
-import { Resource, Role, SelectDropdownType, ValidationResource } from '../../../../types';
+import {
+  Resource,
+  Role,
+  SelectDropdownType,
+  ValidationResource,
+  Region,
+  MachineTypesDropdownType,
+  OpenShiftVersions,
+} from '../../../../types';
 import { useTranslation } from '../../../../../../context/TranslationContext';
 import { validateClusterName } from '../../../validators';
 import ExternalLink from '../../../common/ExternalLink';
 import { updateOnAWSAccountChange } from '../../../hooks/updateOnAWSAccountChange';
 import links from '../../../externalLinks';
 import { useResetFieldOnOptionsChange } from '../../../hooks/useResetFieldOnOptionsChange';
+import { showSecurityGroupsSection } from '../../../helpers';
 
 type DetailsSubStepProps = {
   clusterNameValidation: ValidationResource;
-  openShiftVersions: Resource<SelectDropdownType[]>;
+  openShiftVersions: Resource<OpenShiftVersions[]>;
   roles: Resource<Role[], [awsAccount: string]> & {
     fetch: (awsAccount: string) => Promise<void>;
   };
   awsInfrastructureAccounts: Resource<SelectDropdownType[]>;
   awsBillingAccounts: Resource<SelectDropdownType[]>;
-  regions: Resource<SelectDropdownType[]>;
-  machineTypes: Resource<SelectDropdownType[]>;
+  regions: Resource<Region[], [awsAccount: string]> & {
+    fetch: (awsAccount: string) => Promise<void>;
+  };
+  machineTypes: Resource<MachineTypesDropdownType[], [region: string]> & {
+    fetch?: (region: string) => Promise<void>;
+  };
 };
 
 export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
@@ -29,7 +42,7 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
   awsBillingAccounts,
   regions,
   machineTypes,
-  roles
+  roles,
 }) => {
   const { t } = useTranslation();
   const { cluster } = useItem();
@@ -54,43 +67,6 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
         onWizardExpand={onWizardExpand}
       >
         <Stack hasGutter>
-          <StackItem>
-            <Grid>
-              <GridItem span={4}>
-                <WizTextInput
-                  validation={(name: string, item: unknown) =>
-                    validateClusterName(name, item) || clusterNameValidation.error || undefined
-                  }
-                  path="cluster.name"
-                  label={t('Cluster name')}
-                  validateOnBlur
-                  placeholder={t('Enter the cluster name')}
-                  required
-                  labelHelp={t(
-                    'This will be how we refer to your cluster in the OpenShift cluster list and will form part of the cluster console subdomain.'
-                  )}
-                />
-              </GridItem>
-            </Grid>
-          </StackItem>
-
-          <StackItem>
-            <Grid>
-              <GridItem span={4}>
-                <WizSelect
-                  isFill
-                  path="cluster.cluster_version"
-                  label={t('OpenShift version')}
-                  placeholder={t('Select an OpenShift version')}
-                  options={openShiftVersions.data}
-                  disabled={openShiftVersions.isFetching}
-                  refreshCallback={openShiftVersions.fetch}
-                  required
-                />
-              </GridItem>
-            </Grid>
-          </StackItem>
-
           <StackItem>
             <Grid hasGutter>
               <GridItem span={4}>
@@ -161,6 +137,47 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
           <StackItem>
             <Grid>
               <GridItem span={4}>
+                <WizTextInput
+                  validation={(name: string, item: unknown) =>
+                    validateClusterName(name, item) || clusterNameValidation.error || undefined
+                  }
+                  path="cluster.name"
+                  label={t('Cluster name')}
+                  validateOnBlur
+                  placeholder={t('Enter the cluster name')}
+                  required
+                  labelHelp={t(
+                    'This will be how we refer to your cluster in the OpenShift cluster list and will form part of the cluster console subdomain.'
+                  )}
+                />
+              </GridItem>
+            </Grid>
+          </StackItem>
+
+          <StackItem>
+            <Grid>
+              <GridItem span={4}>
+                <WizSelect
+                  isFill
+                  path="cluster.cluster_version"
+                  label={t('OpenShift version')}
+                  placeholder={t('Select an OpenShift version')}
+                  options={openShiftVersions.data}
+                  disabled={openShiftVersions.isFetching}
+                  refreshCallback={openShiftVersions.fetch}
+                  onValueChange={(_value, item) => {
+                    if (!showSecurityGroupsSection(_value as string)) {
+                      item.cluster.security_groups_worker = undefined;
+                    }
+                  }}
+                  required
+                />
+              </GridItem>
+            </Grid>
+          </StackItem>
+          <StackItem>
+            <Grid>
+              <GridItem span={4}>
                 <WizSelect
                   isFill
                   path="cluster.region"
@@ -180,7 +197,7 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
                     ) {
                       item.cluster.machine_pools_subnets = [];
                     }
-                    if(machineTypes.fetch) void machineTypes.fetch();
+                    if (_value && machineTypes.fetch) void machineTypes.fetch(_value as string);
                   }}
                   required
                 />
