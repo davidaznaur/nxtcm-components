@@ -1,4 +1,4 @@
-import { Section, WizSelect, WizTextInput } from '@patternfly-labs/react-form-wizard';
+import { Section, WizSelect, WizTextInput, useItem } from '@patternfly-labs/react-form-wizard';
 import { Button, Grid, GridItem, Stack, StackItem } from '@patternfly/react-core';
 import React from 'react';
 import { StepDrawer } from '../../../common/StepDrawer';
@@ -6,35 +6,45 @@ import { Resource, Role, SelectDropdownType, ValidationResource } from '../../..
 import { useTranslation } from '../../../../../../context/TranslationContext';
 import { validateClusterName } from '../../../validators';
 import ExternalLink from '../../../common/ExternalLink';
+import { updateOnAWSAccountChange } from '../../../hooks/updateOnAWSAccountChange';
 import links from '../../../externalLinks';
+import { useResetFieldOnOptionsChange } from '../../../hooks/useResetFieldOnOptionsChange';
 
 type DetailsSubStepProps = {
   clusterNameValidation: ValidationResource;
-  openShiftVersions: SelectDropdownType[];
-  versionsIsPending: boolean;
-  refreshVersionsCallback?: () => void;
+  openShiftVersions: Resource<SelectDropdownType[]>;
   roles: Resource<Role[], [awsAccount: string]> & {
     fetch: (awsAccount: string) => Promise<void>;
   };
   awsInfrastructureAccounts: Resource<SelectDropdownType[]>;
   awsBillingAccounts: Resource<SelectDropdownType[]>;
   regions: Resource<SelectDropdownType[]>;
+  machineTypes: Resource<SelectDropdownType[]>;
 };
 
 export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
   clusterNameValidation,
   openShiftVersions,
-  versionsIsPending,
-  refreshVersionsCallback,
-  roles,
   awsInfrastructureAccounts,
   awsBillingAccounts,
   regions,
+  machineTypes,
+  roles
 }) => {
   const { t } = useTranslation();
+  const { cluster } = useItem();
   const [isDrawerExpanded, setIsDrawerExpanded] = React.useState<boolean>(false);
   const drawerRef = React.useRef<HTMLSpanElement>(null);
   const onWizardExpand = () => drawerRef.current && drawerRef.current.focus();
+
+  useResetFieldOnOptionsChange('cluster.region', regions.data);
+  useResetFieldOnOptionsChange('cluster.machine_type', machineTypes.data, 'machinepools-sub-step');
+
+  React.useEffect(() => {
+    if (awsBillingAccounts.data.length === 1 && !cluster.billing_account_id) {
+      cluster.billing_account_id = awsBillingAccounts.data[0].value;
+    }
+  }, [awsBillingAccounts, cluster]);
 
   return (
     <Section label={t('Details')}>
@@ -72,9 +82,9 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
                   path="cluster.cluster_version"
                   label={t('OpenShift version')}
                   placeholder={t('Select an OpenShift version')}
-                  options={openShiftVersions}
-                  disabled={versionsIsPending}
-                  refreshCallback={refreshVersionsCallback}
+                  options={openShiftVersions.data}
+                  disabled={openShiftVersions.isFetching}
+                  refreshCallback={openShiftVersions.fetch}
                   required
                 />
               </GridItem>
@@ -94,22 +104,18 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
                   )}
                   options={awsInfrastructureAccounts.data}
                   disabled={awsInfrastructureAccounts.isFetching}
-                  onValueChange={(_newAccountId, item) => {
-                    // reset downstream role arns when account changes
-                    item.cluster.installer_role_arn = undefined;
-                    item.cluster.worker_role_arn = undefined;
-                    item.cluster.support_role_arn = undefined;
-
-                    if (_newAccountId) {
-                      void roles.fetch(_newAccountId as string);
-                    }
-                  }}
                   required
                   refreshCallback={
                     awsInfrastructureAccounts.fetch
                       ? () => void awsInfrastructureAccounts.fetch?.()
                       : undefined
                   }
+                  onValueChange={(_value, item) => {
+                    void updateOnAWSAccountChange(_value, item, regions.fetch);
+                    if (_value) {
+                      void roles.fetch(_value as string);
+                    }
+                  }}
                 />
               </GridItem>
             </Grid>
@@ -129,6 +135,7 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
               <GridItem span={4}>
                 <WizSelect
                   isFill
+                  disabled={awsBillingAccounts.isFetching}
                   path="cluster.billing_account_id"
                   label={t('Associated AWS billing account')}
                   placeholder={t('Select an AWS billing account')}
@@ -136,7 +143,6 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
                     'The AWS billing account is often the same as your Associated AWS infrastructure account, but does not have to be.'
                   )}
                   options={awsBillingAccounts.data}
-                  disabled={awsBillingAccounts.isFetching}
                   required
                   refreshCallback={
                     awsBillingAccounts.fetch ? () => void awsBillingAccounts.fetch?.() : undefined
@@ -165,6 +171,17 @@ export const DetailsSubStep: React.FunctionComponent<DetailsSubStepProps> = ({
                   )}
                   options={regions.data}
                   disabled={regions.isFetching}
+                  onValueChange={(_value, item) => {
+                    item.cluster.selected_vpc = undefined;
+                    item.cluster.cluster_privacy_public_subnet_id = undefined;
+                    if (
+                      item.cluster.machine_pools_subnets &&
+                      item.cluster.machine_pools_subnets.length > 0
+                    ) {
+                      item.cluster.machine_pools_subnets = [];
+                    }
+                    if(machineTypes.fetch) void machineTypes.fetch();
+                  }}
                   required
                 />
               </GridItem>

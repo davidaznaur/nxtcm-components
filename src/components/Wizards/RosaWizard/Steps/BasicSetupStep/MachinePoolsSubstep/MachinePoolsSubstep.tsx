@@ -39,6 +39,13 @@ type MachinePoolsSubstepProps = {
 export const MachinePoolsSubstep = (props: MachinePoolsSubstepProps) => {
   const { t } = useTranslation();
   const { cluster } = useItem<RosaWizardFormData>();
+  const currentRegion = cluster?.region;
+
+  React.useEffect(() => {
+    if (props.machineTypes.fetch) {
+      void props.machineTypes.fetch();
+    }
+  }, [currentRegion, props.machineTypes]);
 
   const vpcRef = cluster?.selected_vpc;
   const selectedVPC =
@@ -121,6 +128,8 @@ export const MachinePoolsSubstep = (props: MachinePoolsSubstepProps) => {
         <Grid>
           <GridItem span={5}>
             <WizSelect
+              validateOnBlur={true}
+              disabled={props.machineTypes.isFetching}
               label={t('Compute node instance type')}
               path="cluster.machine_type"
               required
@@ -133,7 +142,6 @@ export const MachinePoolsSubstep = (props: MachinePoolsSubstepProps) => {
                 </>
               }
               options={props.machineTypes.data}
-              disabled={props.machineTypes.isFetching}
             />
           </GridItem>
         </Grid>
