@@ -134,5 +134,6 @@ export const TypedConsumerExample: Story = {
     onCancel: () => {
       void 0;
     },
+    fetchAWSInfra: async () => {},
   },
 };

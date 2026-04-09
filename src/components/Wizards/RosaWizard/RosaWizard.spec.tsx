@@ -118,6 +118,7 @@ const defaultProps = {
   onSubmit: async () => {},
   onCancel: () => {},
   wizardsStepsData: minimalWizardsStepsData,
+  fetchAWSInfra: async () => {},
 };
 
 function mountRosaWizard(overrides: Record<string, unknown> = {}) {
@@ -128,6 +129,18 @@ test.describe('RosaWizard', () => {
   test('should render the wizard title', async ({ mount }) => {
     const component = await mount(mountRosaWizard());
     await expect(component.getByRole('heading', { name: 'Create ROSA Cluster' })).toBeVisible();
+  });
+
+  test('should call fetchAWSInfra once on mount', async ({ mount }) => {
+    let callCount = 0;
+    await mount(
+      mountRosaWizard({
+        fetchAWSInfra: async () => {
+          callCount += 1;
+        },
+      })
+    );
+    await expect.poll(() => callCount).toBe(1);
   });
 
   test('should show custom Rosa strings in the nav and react-form-wizard chrome (e.g. Next)', async ({

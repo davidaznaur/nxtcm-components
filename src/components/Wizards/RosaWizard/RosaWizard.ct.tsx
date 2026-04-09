@@ -12,5 +12,6 @@ export const RosaWizardMount: React.FC = () => (
     onSubmit={async () => {}}
     onCancel={() => {}}
     wizardsStepsData={rosaWizardMockStepsData}
+    fetchAWSInfra={async () => {}}
   />
 );

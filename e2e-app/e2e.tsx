@@ -194,6 +194,7 @@ if (rootEl) {
       title="Create ROSA Cluster"
       onSubmit={async () => {}}
       onCancel={() => {}}
+      fetchAWSInfra={async () => {}}
       wizardsStepsData={{
         basicSetupStep: {
           clusterNameValidation: { error: null, isFetching: false },

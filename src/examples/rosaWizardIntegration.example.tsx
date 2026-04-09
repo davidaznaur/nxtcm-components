@@ -104,4 +104,5 @@ export const compileOnlyWizardPropsCheck: ComponentProps<typeof WizardWrapper> =
   onSubmit,
   onCancel: () => undefined,
   wizardsStepsData: wizardStepsData,
+  fetchAWSInfra: async () => {},
 };

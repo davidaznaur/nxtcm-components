@@ -76,6 +76,7 @@ type RosaWizardProps = {
   yamlEditor?: () => ReactNode;
   yaml?: boolean;
   strings?: RosaWizardStringsInput;
+  fetchAWSInfra: any;
 };
 
 function getDefaultYamlEditor() {
@@ -110,6 +111,7 @@ const RosaWizardBody = (props: RosaWizardProps) => {
     onBackToReviewStep,
     yaml,
     strings,
+    fetchAWSInfra
   } = props;
   const rosaStrings = useRosaWizardStrings();
   const { wizard } = rosaStrings;
@@ -119,6 +121,15 @@ const RosaWizardBody = (props: RosaWizardProps) => {
     () => buildWizardStringsForRosa(rosaStrings, strings?.formWizard),
     [rosaStrings, strings?.formWizard]
   );
+
+  React.useEffect(() => {
+    const dataFetch = async() => {
+ const data = await fetchAWSInfra();
+ console.log("DATA", data)
+    }
+   
+    dataFetch();
+  }, [fetchAWSInfra]);
 
   const [isClusterWideProxySelected, setIsClusterWideProxySelected] =
     React.useState<boolean>(false);

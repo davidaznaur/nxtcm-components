@@ -9,6 +9,7 @@ type WizardWrapperProps = {
   onCancel: () => void;
   title: string;
   wizardsStepsData: WizardStepsData;
+  fetchAWSInfra: any;
 };
 
 export const WizardWrapper: React.FunctionComponent<WizardWrapperProps> = (props) => {
@@ -20,6 +21,7 @@ export const WizardWrapper: React.FunctionComponent<WizardWrapperProps> = (props
           onSubmit={props.onSubmit as WizardSubmit}
           onCancel={props.onCancel}
           title={props.title}
+          fetchAWSInfra={props.fetchAWSInfra}
         />
       );
     default:

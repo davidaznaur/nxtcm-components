@@ -333,6 +333,9 @@ const meta: Meta<typeof RosaWizard> = {
     },
   },
   tags: ['autodocs'],
+  args: {
+    fetchAWSInfra: async () => {},
+  },
   argTypes: {
     onSubmit: {
       description: 'Callback function called when the wizard is submitted',
