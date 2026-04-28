@@ -101,7 +101,7 @@ Write the filled-out template to `pr_draft.md` in the workspace root.
 If there are uncommitted or untracked changes, stage and commit them:
 
 ```bash
-git add .
+git add -u
 git commit -s -m "TICKET-ID: <short summary>"
 ```
 
