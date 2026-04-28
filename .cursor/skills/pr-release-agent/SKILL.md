@@ -102,7 +102,7 @@ If there are uncommitted or untracked changes, stage and commit them:
 
 ```bash
 git add .
-git commit -m "TICKET-ID: <short summary>"
+git commit -s -m "TICKET-ID: <short summary>"
 ```
 
 - `TICKET-ID`: the extracted Jira ID (e.g. `FCN-340`). Omit if none found.
