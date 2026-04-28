@@ -87,7 +87,7 @@ Generate a concise PR title following this pattern:
 [TICKET-ID] <type>(<scope>): <short summary>
 ```
 
-- `TICKET-ID`: the extracted Jira ID, omit brackets if none found
+- `TICKET-ID`: the extracted Jira ID, omit TICKET-ID if none found
 - `type`: feat | fix | refactor | test | docs | chore | perf | style
 - `scope`: affected component or area (e.g. `RosaWizard`, `build`)
 - `short summary`: imperative mood, max ~60 chars
@@ -147,7 +147,7 @@ In both cases, capture and display the resulting PR URL to the user.
 
 ### Step 7 — Clean up
 
-Delete `pr_draft.md` from the workspace.
+After Step 6 succeeds (`gh pr create` or `gh pr edit` exits successfully), delete `pr_draft.md` from the workspace. Do not delete it before then, or `--body-file pr_draft.md` will fail.
 
 ## Error handling
 
