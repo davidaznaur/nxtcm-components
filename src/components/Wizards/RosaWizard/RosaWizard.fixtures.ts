@@ -519,7 +519,7 @@ export const useFetchNeededData = <T>(mockData: T) => {
     isFetching: boolean;
     error: string | null;
   }>({
-    data: [] as T,
+    data: mockData,
     isFetching: false,
     error: null,
   });
