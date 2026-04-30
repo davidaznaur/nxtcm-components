@@ -33,51 +33,99 @@ PR Release Progress:
 
 ### Step 1 — Gather context
 
-Run these commands **in parallel** to collect all necessary information:
+**Author scope — required**
+
+The PR **title, Description, Focus Areas, and checkbox inferences must reflect only
+work authored by the person running the workflow** (plus any unstaged/staged edits
+still on disk). Do **not** summarize, quote, or paraphrase commit messages from
+other contributors—even if those commits sit on `main..HEAD`.
+
+1. Resolve the author identity (read-only):
+
+   ```bash
+   AUTHOR_EMAIL="$(git config user.email)"
+   ```
+
+   If **`AUTHOR_EMAIL` is empty**, stop and tell the user to set `user.email` (or run
+   the workflow after configuring it). Do **not** change git config — see Important
+   notes.
+
+2. Compute the merge base with the integration branch (assume **`main`** unless the
+   user specifies otherwise):
+
+   ```bash
+   MB="$(git merge-base main HEAD)"
+   ```
+
+Run these commands **in parallel** with the usual housekeeping (branch, status):
 
 ```bash
 git branch --show-current
 git status --short
 git diff
 git diff --cached
-git log main..HEAD --oneline
 ```
 
-Also run `git diff main...HEAD` and `git diff main...HEAD --stat` to capture
-already-committed changes on the branch. Combine all sources (uncommitted,
-staged, and already-committed) to build the full picture of what will be in
-the PR.
+**Commits and patches authored by `AUTHOR_EMAIL` only** — use these for narrative
+scope (titles, bullets, Focus Areas):
+
+```bash
+git log "${MB}"..HEAD --author="${AUTHOR_EMAIL}" --oneline
+git log "${MB}"..HEAD --author="${AUTHOR_EMAIL}" --stat
+```
+
+For finer detail when summarizing behaviour, restrict to authored commits:
+
+```bash
+git log "${MB}"..HEAD --author="${AUTHOR_EMAIL}" -p
+```
+
+**(Optional)** For awareness only — **do not** copy summaries from these into the PR
+unless the user asked to describe the entire branch:
+
+```bash
+git log main..HEAD --oneline
+git diff main...HEAD --stat
+```
 
 From the branch name, extract a **Jira ticket ID** if present.
 Pattern: branch contains a segment matching `[A-Z]+-\d+` (e.g. `OCMQE-1234`).
 If no match, leave the Jira field blank.
 
-If there are **no changes at all** (no uncommitted work AND no commits ahead
-of `main`), stop and tell the user.
+**Stopping**
+
+- **No authored work**: If **`git diff` and `git diff --cached`** are empty **and**
+  **`git log "${MB}"..HEAD --author="${AUTHOR_EMAIL}"`** is empty, stop and explain.
+  Optionally note that `main..HEAD` still has other commits if
+  `git log main..HEAD --oneline` is non-empty.
+
+- **No changes at all** (no uncommitted work **and** no commits ahead of `main` on
+  the branch): stop and tell the user.
 
 ### Step 2 — Draft the PR description
 
 Read the PR template at `.github/pull_request_template.md`.
 
-Fill every section using the gathered context:
+Fill every section using **`AUTHOR_EMAIL`-scoped commits and patches**, **plus**
+ **`git diff` / `git diff --cached`** (your local edits).
 
 | Template section | How to fill |
 |---|---|
-| **Description** | Summarize the purpose and scope of the changes in 2–4 sentences. |
+| **Description** | Summarize **only** the purpose of **your** authored commits and current local edits (`git log "${MB}"..HEAD --author=…`, `git show`/`git log -p` as needed). Do **not** describe unrelated commits **or reuse wording from merged PR descriptions** appearing elsewhere on the branch. If the GitHub branch includes others’ commits, you may add **one short line** under **Additional Notes** stating that broader history exists on this branch—but keep the template body about **your** scope. |
 | **Jira issue #** | Insert a Markdown link: `[TICKET-ID](https://redhat.atlassian.net/browse/TICKET-ID)` (or leave blank if no ticket). |
 | **Backport of** | Leave blank unless commits reference a backport. |
-| **Type of Change** | Mark the checkbox(es) that match the changes. |
-| **Testing > Manual Testing** | Infer reasonable test steps from the diff. If the change is UI-related, suggest Storybook verification. If purely logic, suggest unit test verification. |
-| **Testing > Automated Testing** | Check "Unit tests added/updated" if test files were modified/added. Check "All unit tests pass" only if the user confirms. |
-| **Screenshots/Recordings** | Write "N/A — no UI changes" or "TODO: add screenshots" depending on whether UI files changed. |
-| **Checklist > Code Quality** | Pre-check items you can verify from the diff (style, no console logs, no warnings). Leave uncertain items unchecked. |
-| **Checklist > Documentation** | Check Storybook item if `*.stories.*` files were touched. |
-| **Checklist > Accessibility** | Leave unchecked unless evidence in the diff. |
-| **Checklist > Dependencies** | Check if `package.json` / lock files changed. |
-| **Breaking Changes** | Mark "No" unless the diff shows breaking API changes. If yes, describe the migration path. |
-| **Additional Notes** | Add any context worth calling out (e.g. follow-up work, known limitations). |
-| **Focus Areas** | List files or areas most impacted by the change. |
-| **Questions for Reviewers** | Leave blank or add relevant questions. |
+| **Type of Change** | Mark the checkbox(es) from **your** diff/patch scope only. |
+| **Testing > Manual Testing** | Infer steps **only from what you touched** per author scope (+ WIP diff). |
+| **Testing > Automated Testing** | Check "Unit tests added/updated" if **you** added/changed tests in scope. Check "All unit tests pass" only if the user confirms. |
+| **Screenshots/Recordings** | Use **your** UI/story edits only (`N/A` if none). |
+| **Checklist > Code Quality** | Pre-check from **your** changes only if verifiable from that scope. |
+| **Checklist > Documentation** | e.g. Storybook if **you** touched stories in scope. |
+| **Checklist > Accessibility** | Unchecked unless evidence in **your** scope. |
+| **Checklist > Dependencies** | Check if **your** scope touched `package.json` / locks. |
+| **Breaking Changes** | Infer from **your** API/export changes only. |
+| **Additional Notes** | Optional branch-history caveat (see Description row). Follow-ups affecting only your scope. |
+| **Focus Areas** | Files/areas touched in **your** commits + WIP, not unrelated paths. |
+| **Questions for Reviewers** | Leave blank unless tied to **your** changes. |
 
 #### Title generation
 
@@ -87,10 +135,13 @@ Generate a concise PR title following this pattern:
 [TICKET-ID] <type>(<scope>): <short summary>
 ```
 
-- `TICKET-ID`: the extracted Jira ID, omit TICKET-ID if none found
+Base the title on **your** scoped work only (commits by `AUTHOR_EMAIL` + unstaged/staged edits).
+
+- `TICKET-ID`: the extracted Jira ID; omit if none found
 - `type`: feat | fix | refactor | test | docs | chore | perf | style
 - `scope`: affected component or area (e.g. `RosaWizard`, `build`)
 - `short summary`: imperative mood, max ~60 chars
+
 
 ### Step 3 — Save the draft
 
@@ -166,6 +217,8 @@ After Step 6 succeeds (`gh pr create` or `gh pr edit` exits successfully), delet
 
 ## Error handling
 
+- **`user.email` unset**: Stop; author-scoped drafts require `git config user.email`.
+- **No authored work** (clean tree and no commits by `AUTHOR_EMAIL` in `MB..HEAD`): Stop; explain and point at `git config user.email` / branch history.
 - **No changes at all** (clean tree AND no commits ahead of `main`): Stop and tell the user.
 - **`gh` not authenticated**: Stop and tell the user to run `gh auth login`.
 - **Commit fails**: Stop and show the error (e.g. pre-commit hook rejection).
@@ -174,6 +227,7 @@ After Step 6 succeeds (`gh pr create` or `gh pr edit` exits successfully), delet
 
 ## Important notes
 
+- PR bodies describe **only the configured author’s commits** (and current `git diff` / `git diff --cached`), not the entire `main...HEAD` narrative from other PRs.
 - NEVER force-push.
 - NEVER modify git config.
 - Always show the final PR URL to the user.
