@@ -125,25 +125,40 @@ If the push fails (e.g. no upstream), surface the error and stop.
 
 ### Step 6 — Create or update the PR
 
-First, check whether a PR already exists for the current branch:
+Determine whether there is an **open** PR for this branch’s **head**. Do **not**
+reuse a **closed** or **merged** PR: in those cases **create** a new PR instead.
+
+Substitute `<branch>` with the output of `git branch --show-current`. If the repo
+uses a fork, use the `--head` form `OWNER:<branch>` (same value `gh push` /
+GitHub associates with the branch).
+
+**List open PRs for this head** (recommended):
 
 ```bash
-gh pr view --json url,number 2>/dev/null
+gh pr list --head "<branch>" --state open --json number,url --jq '.[0].number'
 ```
 
-**If no PR exists** (command fails), create one:
+- **If the command prints a PR number**: **update** that PR:
 
-```bash
-gh pr create --base main --title "<generated title>" --body-file pr_draft.md
-```
+  ```bash
+  gh pr edit <number> --title "<generated title>" --body-file pr_draft.md
+  ```
 
-**If a PR already exists**, update its title and body:
+- **If the command prints nothing** (no open PR for this branch, including after a
+  previous PR was merged or closed): **create** a new PR:
 
-```bash
-gh pr edit --title "<generated title>" --body-file pr_draft.md
-```
+  ```bash
+  gh pr create --base main --head "<branch>" --title "<generated title>" --body-file pr_draft.md
+  ```
 
-In both cases, capture and display the resulting PR URL to the user.
+  Omit `--head` when the current branch on `origin` is unambiguous for the repo
+  (same as default `gh pr create`); keep `--head OWNER:<branch>` for forks.
+
+  **Alternative:** `gh pr view --json number,url,state` — **edit only if
+  `state` is `OPEN`**; if `MERGED` or `CLOSED` or the command fails, **create**
+  a new PR. Prefer `pr list --state open` so you never target a closed PR.
+
+In all cases, capture and display the resulting PR URL to the user.
 
 ### Step 7 — Clean up
 
