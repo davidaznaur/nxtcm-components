@@ -69,6 +69,10 @@ const mockAwsInfrastructureAccounts = [
     label: 'AWS Account - Staging (234567890123)',
     value: 'aws-staging-234567890123',
   },
+  {
+    label: 'AWS Account - change in region(345678901234)',
+    value: 'aws-dev-345678901234',
+  },
 ];
 
 const mockAwsBillingAccounts = [
@@ -88,10 +92,10 @@ const mockRegions = [
   { label: 'EU (Ireland)', value: 'eu-west-1' },
   { label: 'EU (Frankfurt)', value: 'eu-central-1' },
   { label: 'Asia Pacific (Tokyo)', value: 'ap-northeast-1' },
+  { label: 'Region for machine types (us-east-1)', value: 'us-east-1' },
 ];
 
 const mockRegionsLimited = [
-  { label: 'US East (N. Virginia) - Limited', value: 'us-east-1' },
   { label: 'US West (Oregon) - Limited', value: 'us-west-2' },
   { label: 'EU (Frankfurt)', value: 'eu-west-4' },
   { label: 'EU (Rome)', value: 'eu-west-5' },
