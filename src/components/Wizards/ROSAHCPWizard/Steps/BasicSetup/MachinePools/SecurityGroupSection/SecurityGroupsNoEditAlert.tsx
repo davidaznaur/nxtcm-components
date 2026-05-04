@@ -1,8 +1,7 @@
-import React from 'react';
-
-import { Alert, AlertActionLink } from '@patternfly/react-core';
+import { Alert } from '@patternfly/react-core';
 import links from '../../../../links';
 import { useRosaHcpWizardStrings } from '../../../../stringsProvider/RosaHcpWizardStringsContext';
+import ExternalLink from '../../../../components/ExternalLink';
 
 const SecurityGroupsNoEditAlert = () => {
   const sg = useRosaHcpWizardStrings().securityGroups;
@@ -14,12 +13,12 @@ const SecurityGroupsNoEditAlert = () => {
       title={sg.noEditTitle}
       actionLinks={
         <>
-          <AlertActionLink component="a" href={links.ROSA_SECURITY_GROUPS} target="_blank">
+          <ExternalLink noIcon href={links.ROSA_SECURITY_GROUPS} className="pf-v6-u-pr-sm">
             {sg.noEditViewMoreInfo}
-          </AlertActionLink>
-          <AlertActionLink component="a" href={links.AWS_CONSOLE_SECURITY_GROUPS} target="_blank">
+          </ExternalLink>
+          <ExternalLink noIcon href={links.AWS_CONSOLE_SECURITY_GROUPS}>
             {sg.noEditAwsConsoleLink}
-          </AlertActionLink>
+          </ExternalLink>
         </>
       }
     />
