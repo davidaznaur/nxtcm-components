@@ -20,7 +20,6 @@ import RedoIcon from '@patternfly/react-icons/dist/esm/icons/redo-icon';
 
 import SecurityGroupsViewList from './SecurityGroupsViewList';
 
-import './EditSecurityGroups.scss';
 import { securityGroupsSort } from './helpers';
 import { validateSecurityGroups } from '../../../../validators';
 import { truncateTextWithEllipsis } from '../../../../helpers';
@@ -110,7 +109,6 @@ const EditSecurityGroups = ({
         )
       }
       aria-label={sg.optionsMenuAria}
-      className="security-groups-menu-toggle"
     >
       {sg.selectToggle}
     </MenuToggle>
