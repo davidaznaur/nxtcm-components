@@ -35,20 +35,11 @@ const PopoverHintWithTitle = ({
           icon={
             <span className="popover-with-title-span">
               {isErrorHint ? (
-                <Button
-                  icon={<ExclamationCircleIcon className="status-icon danger" />}
-                  isInline
-                  variant="link"
-                >
-                  {` ${title}`}
-                </Button>
+                <ExclamationCircleIcon className="status-icon danger" />
               ) : (
-                <>
-                  {!displayHintIcon && <OutlinedQuestionCircleIcon />}
-
-                  {` ${title}`}
-                </>
+                !displayHintIcon && <OutlinedQuestionCircleIcon />
               )}
+              {` ${title}`}
             </span>
           }
           className="popover-with-title-button"
