@@ -9,19 +9,7 @@ import React from 'react';
 import { ClusterWideProxy } from './Steps/BasicSetup/ClusterWideProxy/ClusterWideProxy';
 import { Review } from './Steps/Review/Review';
 import { useRosaHcpWizardStrings } from './stringsProvider/RosaHcpWizardStringsContext';
-
-const STEP_IDS = {
-  BASIC_SETUP: 'basic-setup-step',
-  DETAILS: 'details-substep',
-  ROLES_AND_POLICIES: 'roles-and-policies-step',
-  MACHINE_POOLS: 'machine-pools-substep',
-  NETWORKING: 'networking-substep',
-  OPTIONAL_SETUP: 'optional-setup-step',
-  CLUSTER_WIDE_PROXY: 'cluster-wide-proxy-step',
-  ENCRYPTION: 'encryption-step',
-  CLUSTER_UPDATES: 'cluster-updates-step',
-  REVIEW: 'review-step',
-} as const;
+import { STEP_IDS } from './constants';
 
 export const ROSAHCPWizardBody = () => {
   //setShowClusterWideProxy is needed to be passed into Networking step

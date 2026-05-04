@@ -1,35 +1,14 @@
-export const stepId = {
-  CONTROL_PLANE: 'control-plane',
-  ACCOUNTS_AND_ROLES_AS_FIRST_STEP: 'accounts-and-roles-as-first-step',
-  ACCOUNTS_AND_ROLES_AS_SECOND_STEP: 'accounts-and-roles-as-second-step',
-  CLUSTER_SETTINGS: 'cluster-settings',
-  CLUSTER_SETTINGS_DETAILS: 'cluster-settings-details',
-  CLUSTER_SETTINGS_MACHINE_POOL: 'cluster-settings-machine-pool',
-  NETWORKING: 'networking',
-  NETWORKING_CONFIGURATION: 'networking-configuration',
-  NETWORKING_VPC_SETTINGS: 'networking-vpc-settings',
-  NETWORKING_CLUSTER_WIDE_PROXY: 'networking-cluster-wide-proxy',
-  NETWORKING_CIDR_RANGES: 'networking-cidr-ranges',
-  CLUSTER_ROLES_AND_POLICIES: 'cluster-roles-and-policies',
-  CLUSTER_UPDATES: 'cluster-updates',
-  REVIEW_AND_CREATE: 'review-and-create',
-};
-
-export const stepName = {
-  CONTROL_PLANE: 'Control plane',
-  ACCOUNTS_AND_ROLES_AS_FIRST_STEP: 'Accounts and roles',
-  ACCOUNTS_AND_ROLES_AS_SECOND_STEP: 'Accounts and roles',
-  CLUSTER_SETTINGS: 'Cluster settings',
-  CLUSTER_SETTINGS_DETAILS: 'Details',
-  CLUSTER_SETTINGS_MACHINE_POOL: 'Machine pool',
-  NETWORKING: 'Networking',
-  NETWORKING_CONFIGURATION: 'Configuration',
-  NETWORKING_VPC_SETTINGS: 'VPC settings',
-  NETWORKING_CLUSTER_WIDE_PROXY: 'Cluster-wide proxy',
-  NETWORKING_CIDR_RANGES: 'CIDR ranges',
-  CLUSTER_ROLES_AND_POLICIES: 'cluster roles and policies',
-  CLUSTER_UPDATES: 'Cluster updates',
-  REVIEW_AND_CREATE: 'Review and create',
+export const STEP_IDS = {
+  BASIC_SETUP: 'basic-setup-step',
+  DETAILS: 'details-substep',
+  ROLES_AND_POLICIES: 'roles-and-policies-step',
+  MACHINE_POOLS: 'machine-pools-substep',
+  NETWORKING: 'networking-substep',
+  OPTIONAL_SETUP: 'optional-setup-step',
+  CLUSTER_WIDE_PROXY: 'cluster-wide-proxy-step',
+  ENCRYPTION: 'encryption-step',
+  CLUSTER_UPDATES: 'cluster-updates-step',
+  REVIEW: 'review-step',
 };
 
 export const AWS_KMS_SERVICE_ACCOUNT_REGEX =
