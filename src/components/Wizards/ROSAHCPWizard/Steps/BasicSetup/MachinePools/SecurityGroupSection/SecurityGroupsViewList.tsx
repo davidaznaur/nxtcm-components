@@ -3,10 +3,6 @@ import React from 'react';
 import { Label, LabelGroup } from '@patternfly/react-core';
 import { SecurityGroup } from '../../../../../types';
 
-// We increase Patternfly's maximum length of 16ch, due to https://github.com/patternfly/patternfly-react/issues/9690.
-// The tooltip won't show when mounted but not being visible (e.g. in an ExpandableSection)
-const SECURITY_GROUPS_NAME_MAX_WIDTH = '50ch';
-
 const SecurityGroupsViewList = ({
   securityGroups,
   emptyMessage,
@@ -28,13 +24,7 @@ const SecurityGroupsViewList = ({
         const { id = '' } = sg;
         const onClose = onCloseItem ? () => onCloseItem(id) : undefined;
         return (
-          <Label
-            variant="outline"
-            id={id}
-            key={id}
-            onClose={onClose}
-            textMaxWidth={SECURITY_GROUPS_NAME_MAX_WIDTH}
-          >
+          <Label variant="outline" id={id} key={id} onClose={onClose}>
             {sg.name || id}
           </Label>
         );
