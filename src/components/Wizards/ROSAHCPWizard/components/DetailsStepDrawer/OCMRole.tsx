@@ -5,7 +5,7 @@ import { TabGroup } from '../TabGroup';
 import PopoverHintWithTitle from '../PopoverHitWithTitle';
 
 export const OCMRole = () => {
-  const o = useRosaHcpWizardStrings().ocmRole;
+  const { ocmRole: o, associateAwsDrawer: a } = useRosaHcpWizardStrings();
 
   return (
     <>
@@ -35,18 +35,22 @@ export const OCMRole = () => {
             title: o.tabCreateNew,
             body: (
               <>
-                <strong>{o.basicOcmRoleLabel}</strong>
+                <Content component={ContentVariants.p} className="pf-v6-u-font-weight-bold">
+                  {o.basicOcmRoleLabel}
+                </Content>
                 <CopyInstruction
                   data-testid="copy-rosa-create-ocm-role"
-                  textAriaLabel="Copyable ROSA create ocm-role"
+                  textAriaLabel={a.createOCMRoleAriaLabel}
                 >
                   rosa create ocm-role
                 </CopyInstruction>
                 <div className="pf-v6-u-mt-md pf-v6-u-mb-md">{o.orDivider}</div>
-                <strong>{o.adminOcmRoleLabel}</strong>
+                <Content component={ContentVariants.p} className="pf-v6-u-font-weight-bold">
+                  {o.adminOcmRoleLabel}
+                </Content>
                 <CopyInstruction
                   data-testid="copy-rosa-create-ocm-admin-role"
-                  textAriaLabel="Copyable ROSA create ocm-role --admin"
+                  textAriaLabel={a.createOCMRoleAdminAriaLabel}
                 >
                   rosa create ocm-role --admin
                 </CopyInstruction>
@@ -70,10 +74,12 @@ export const OCMRole = () => {
             title: o.tabLinkExisting,
             body: (
               <>
-                <strong>{o.linkExistingLead}</strong>
+                <Content component={ContentVariants.p} className="pf-v6-u-font-weight-bold">
+                  {o.linkExistingLead}
+                </Content>
                 <CopyInstruction
                   data-testid="copy-rosa-link-ocm-role"
-                  textAriaLabel={`Copyable rosa link ocm-role <arn> command`}
+                  textAriaLabel={a.linkOCMRoleAriaLabel}
                 >
                   {`rosa link ocm-role <arn>`}
                 </CopyInstruction>

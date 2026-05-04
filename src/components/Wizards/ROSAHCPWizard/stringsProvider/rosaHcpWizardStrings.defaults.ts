@@ -71,6 +71,9 @@ export const defaultRosaHcpWizardStrings: RosaHcpWizardStrings = {
     closingPrompt:
       "After you've completed all the steps, close this guide and choose your account.",
     closeButton: 'Close',
+    createOCMRoleAriaLabel: 'Copyable ROSA create ocm-role',
+    createOCMRoleAdminAriaLabel: 'Copyable ROSA create ocm-role --admin',
+    linkOCMRoleAriaLabel: 'Copyable rosa link ocm-role <arn> command',
   },
   ocmRole: {
     checkLinkedTitle: 'First, check if a role exists and is linked with:',

@@ -190,6 +190,9 @@ export type RosaHcpWizardStrings = {
     step3Title: string;
     closingPrompt: string;
     closeButton: string;
+    createOCMRoleAriaLabel: string;
+    createOCMRoleAdminAriaLabel: string;
+    linkOCMRoleAriaLabel: string;
   };
   ocmRole: {
     checkLinkedTitle: string;
