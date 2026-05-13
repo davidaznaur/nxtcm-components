@@ -50,7 +50,8 @@ export const kmsKeyArnSchema = yup
   .optional()
   .meta({
     id: 'kms_key_arn',
-    labelKey: 'encryption.kmsKeyArnLabel',
+    labelKey: 'encryption.keyArnLabel',
+    labelHelpKey: 'encryption.keyArnHelp',
     stepId: STEP_IDS.ENCRYPTION,
     fieldType: 'text',
     showInReview: true,
@@ -63,7 +64,8 @@ export const etcdEncryptionSchema = yup
   .optional()
   .meta({
     id: 'etcd_encryption',
-    labelKey: 'encryption.etcdEncryptionLabel',
+    labelKey: 'encryption.etcdLabel',
+    title: 'etcd encryption',
     stepId: STEP_IDS.ENCRYPTION,
     fieldType: 'checkbox',
     showInReview: true,
@@ -75,7 +77,8 @@ export const etcdKeyArnSchema = yup
   .optional()
   .meta({
     id: 'etcd_key_arn',
-    labelKey: 'encryption.etcdKeyArnLabel',
+    labelKey: 'encryption.keyArnLabel',
+    labelHelpKey: 'encryption.keyArnHelp',
     stepId: STEP_IDS.ENCRYPTION,
     fieldType: 'text',
   } satisfies WizardFieldMeta)
