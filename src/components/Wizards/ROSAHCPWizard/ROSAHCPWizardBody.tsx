@@ -60,6 +60,17 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
               <WizardStep name={sl.networking} id={STEP_IDS.NETWORKING} key={STEP_IDS.NETWORKING}>
                 <Networking {...wizardData} />
               </WizardStep>,
+              ...(!showClusterWideProxy
+                ? [
+                    <WizardStep
+                      name={sl.clusterWideProxy}
+                      id={STEP_IDS.CLUSTER_WIDE_PROXY}
+                      key={STEP_IDS.CLUSTER_WIDE_PROXY}
+                    >
+                      <ClusterWideProxy />{' '}
+                    </WizardStep>,
+                  ]
+                : []),
             ]}
           />
 
@@ -83,17 +94,6 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
               >
                 <ClusterUpdates />
               </WizardStep>,
-              ...(!showClusterWideProxy
-                ? [
-                    <WizardStep
-                      name={sl.clusterWideProxy}
-                      id={STEP_IDS.CLUSTER_WIDE_PROXY}
-                      key={STEP_IDS.CLUSTER_WIDE_PROXY}
-                    >
-                      <ClusterWideProxy />{' '}
-                    </WizardStep>,
-                  ]
-                : []),
             ]}
           />
           <WizardStep name={sl.review} id={STEP_IDS.REVIEW} key={STEP_IDS.REVIEW}>
