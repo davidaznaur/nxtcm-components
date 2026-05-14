@@ -6,7 +6,7 @@ export type WizardFieldMeta = {
   /** Unique field identifier (matches the schema path). */
   id: string;
   /** Dot-path key into the strings provider for resolving label, placeholder, and helper text at runtime. */
-  labelKey: string;
+  labelKey?: string;
   /** Dot-path for `helperText` when not inlined in `.meta()`. */
   helperTextKey?: string;
   /** Dot-path for `labelHelp` when not inlined in `.meta()`. */
@@ -29,6 +29,8 @@ export type WizardFieldMeta = {
   advanced?: boolean;
   /** Display unit for the review step. */
   unit?: string;
+  /** Display or hide label */
+  displayLabel?: boolean;
 };
 
 /**
