@@ -83,7 +83,7 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
               >
                 <ClusterUpdates />
               </WizardStep>,
-              ...(showClusterWideProxy
+              ...(!showClusterWideProxy
                 ? [
                     <WizardStep
                       name={sl.clusterWideProxy}
