@@ -30,6 +30,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': repoRoot,
+      '@redhat-cloud-services/nxtcm-cluster-table': path.join(
+        repoRoot,
+        'packages/nxtcm-cluster-table/src'
+      ),
       '@redhat-cloud-services/nxtcm-dashboard': path.join(repoRoot, 'packages/nxtcm-dashboard/src'),
       '@redhat-cloud-services/nxtcm-rosa-hcp-wizard': path.join(
         repoRoot,

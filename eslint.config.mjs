@@ -91,7 +91,7 @@ export default [
             // External packages
             ['^@?\\w'],
             // Workspace and source aliases
-            ['^@redhat-cloud-services/nxtcm-(dashboard|rosa-hcp-wizard)', '^@/'],
+            ['^@redhat-cloud-services/nxtcm-(dashboard|rosa-hcp-wizard|cluster-table)', '^@/'],
             // Parent and local imports
             ['^\\.'],
             // CSS and SCSS last
@@ -229,9 +229,11 @@ export default [
     },
   },
 
-  // Dashboard and Wizard: prevent self-imports + restrict PatternFly to dynamic paths
+  // Workspace components: prevent self-imports + restrict PatternFly to dynamic paths
   {
     files: [
+      'packages/nxtcm-cluster-table/src/**/*.ts',
+      'packages/nxtcm-cluster-table/src/**/*.tsx',
       'packages/nxtcm-dashboard/src/**/*.ts',
       'packages/nxtcm-dashboard/src/**/*.tsx',
       'packages/nxtcm-rosa-hcp-wizard/src/**/*.ts',
@@ -259,6 +261,8 @@ export default [
             },
           ],
           patterns: [
+            '@redhat-cloud-services/nxtcm-cluster-table',
+            '@redhat-cloud-services/nxtcm-cluster-table/*',
             '@redhat-cloud-services/nxtcm-dashboard',
             '@redhat-cloud-services/nxtcm-dashboard/*',
             '@redhat-cloud-services/nxtcm-rosa-hcp-wizard',

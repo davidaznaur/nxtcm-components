@@ -6,6 +6,7 @@ const { execFileSync } = require('child_process');
 const SCRIPT_PATH = path.join(process.cwd(), 'scripts', 'assert-storybook-public.mjs');
 
 const ALL_REQUIRED_TITLES = [
+  'Components/ClusterTable/ClusterTable',
   'Components/Dashboard/AdvisorCategories',
   'Components/Dashboard/AdvisorSeverity',
   'Components/Dashboard/CVECard',

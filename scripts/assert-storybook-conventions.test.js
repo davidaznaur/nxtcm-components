@@ -87,6 +87,8 @@ describe('Storybook repository story convention contract (Layer B)', () => {
   const rootDir = path.resolve(__dirname, '..');
 
   const EXPECTED_PUBLIC_STORIES = {
+    'packages/nxtcm-cluster-table/src/ClusterTable/ClusterTable.stories.tsx':
+      'Components/ClusterTable/ClusterTable',
     'packages/nxtcm-dashboard/src/Dashboard.stories.tsx': 'Components/Dashboard/Dashboard',
     'packages/nxtcm-dashboard/src/CostManagement/CostManagement.stories.tsx':
       'Components/Dashboard/CostManagement',
@@ -134,6 +136,7 @@ describe('Storybook repository story convention contract (Layer B)', () => {
     const invalidFiles = allStoryFiles.filter(
       (f) =>
         !f.startsWith('packages/nxtcm-dashboard/src/') &&
+        !f.startsWith('packages/nxtcm-cluster-table/src/') &&
         !f.startsWith('packages/nxtcm-rosa-hcp-wizard/src/')
     );
     expect(invalidFiles).toEqual([]);

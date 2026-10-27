@@ -15,7 +15,9 @@
       "@redhat-cloud-services/nxtcm-dashboard/*": ["./packages/nxtcm-dashboard/src/*"],
       "@redhat-cloud-services/nxtcm-rosa-hcp-wizard": ["./packages/nxtcm-rosa-hcp-wizard/src"],
       "@redhat-cloud-services/nxtcm-rosa-hcp-wizard/*": ["./packages/nxtcm-rosa-hcp-wizard/src/*"],
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@redhat-cloud-services/nxtcm-cluster-table": ["./packages/nxtcm-cluster-table/src"],
+      "@redhat-cloud-services/nxtcm-cluster-table/*": ["./packages/nxtcm-cluster-table/src/*"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "types": ["node", "jest", "@testing-library/jest-dom"]
@@ -30,7 +32,8 @@
     "playwright-ct.config.ts",
     "vite.e2e.config.ts",
     "scripts/react-compatibility/consumer.tsx",
-    "vite-env.d.ts"
+    "vite-env.d.ts",
+    "packages/nxtcm-cluster-table/src/**/*"
   ],
   "exclude": ["node_modules", "dist"]
 }

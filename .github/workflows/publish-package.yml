@@ -23,6 +23,11 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           case "$RELEASE_TAG" in
+            nxtcm-cluster-table-v*)
+              echo "package-dir=packages/nxtcm-cluster-table" >> "$GITHUB_OUTPUT"
+              echo "display-name=Cluster Table" >> "$GITHUB_OUTPUT"
+              echo "tag-prefix=nxtcm-cluster-table-v" >> "$GITHUB_OUTPUT"
+              ;;
             nxtcm-dashboard-v*)
               echo "package-dir=packages/nxtcm-dashboard" >> "$GITHUB_OUTPUT"
               echo "display-name=Dashboard" >> "$GITHUB_OUTPUT"
@@ -34,7 +39,7 @@ jobs:
               echo "tag-prefix=nxtcm-rosa-hcp-wizard-v" >> "$GITHUB_OUTPUT"
               ;;
             *)
-              echo "::error::Unrecognized release tag '${RELEASE_TAG}'. Expected nxtcm-dashboard-v* or nxtcm-rosa-hcp-wizard-v*."
+              echo "::error::Unrecognized release tag '${RELEASE_TAG}'. Expected nxtcm-dashboard-v*, nxtcm-rosa-hcp-wizard-v*, or nxtcm-cluster-table-v*."
               exit 1
               ;;
           esac

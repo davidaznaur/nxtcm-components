@@ -1,6 +1,7 @@
 import { type ReactElement, useState, version } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { ClusterTable } from '@redhat-cloud-services/nxtcm-cluster-table';
 import { TotalClusters } from '@redhat-cloud-services/nxtcm-dashboard';
 import {
   RosaHCPWizard,
@@ -41,6 +42,16 @@ function Consumer(): ReactElement {
     <>
       <output aria-label="React version">{version}</output>
       <output aria-label="Last action">{action}</output>
+      <ClusterTable
+        data={[
+          { id: 'large', nodes: 12 },
+          { id: 'small', nodes: 2 },
+        ]}
+        getRowId={(row) => row.id}
+        ariaLabel="Compatibility clusters"
+        persistence={{ key: 'compatibility-clusters' }}
+        hasDraggableHeaders
+      />
       <TotalClusters data={{ total: 23 }} onViewMore={() => setAction('view clusters')} />
       <RosaHCPWizard
         title="Compatibility wizard"

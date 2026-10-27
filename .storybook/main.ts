@@ -12,6 +12,7 @@ function includeInternalStories(): boolean {
 const config: StorybookConfig = {
   stories: [
     '../src/**/*.mdx',
+    '../packages/nxtcm-cluster-table/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
     '../packages/nxtcm-dashboard/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
     '../packages/nxtcm-rosa-hcp-wizard/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
   ],
@@ -47,6 +48,10 @@ const config: StorybookConfig = {
       resolve: {
         alias: {
           '@': path.resolve(import.meta.dirname, '../src'),
+          '@redhat-cloud-services/nxtcm-cluster-table': path.resolve(
+            import.meta.dirname,
+            '../packages/nxtcm-cluster-table/src'
+          ),
           '@redhat-cloud-services/nxtcm-dashboard': path.resolve(
             import.meta.dirname,
             '../packages/nxtcm-dashboard/src'

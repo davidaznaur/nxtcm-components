@@ -11,6 +11,7 @@ const libRollupExternal = [
   /^react(?:$|\/)/,
   /^react-dom(?:$|\/)/,
   /^@patternfly\/.*/,
+  /^@dnd-kit\/.*/,
   'js-yaml',
   'yaml',
   /^monaco-editor/,
@@ -83,6 +84,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(repoRoot, './'),
+      '@redhat-cloud-services/nxtcm-cluster-table': path.resolve(
+        repoRoot,
+        './packages/nxtcm-cluster-table/src'
+      ),
       '@redhat-cloud-services/nxtcm-dashboard': path.resolve(
         repoRoot,
         './packages/nxtcm-dashboard/src'

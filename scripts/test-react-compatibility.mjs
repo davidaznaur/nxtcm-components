@@ -20,10 +20,12 @@ import { build, preview } from 'vite';
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const rootRequire = createRequire(join(repo, 'package.json'));
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
-const packages = ['nxtcm-dashboard', 'nxtcm-rosa-hcp-wizard'].map((name) => ({
-  directory: join(repo, 'packages', name),
-  manifest: readJson(join(repo, 'packages', name, 'package.json')),
-}));
+const packages = ['nxtcm-dashboard', 'nxtcm-rosa-hcp-wizard', 'nxtcm-cluster-table'].map(
+  (name) => ({
+    directory: join(repo, 'packages', name),
+    manifest: readJson(join(repo, 'packages', name, 'package.json')),
+  })
+);
 
 // Check both formats, including sources from bundled dependencies. An external
 // import alone is insufficient: a second JSX runtime could still be embedded.
@@ -176,6 +178,14 @@ try {
       try {
         await page.goto(server.resolvedUrls.local[0]);
         await expect(page.getByLabel('React version')).toHaveText(reactVersion);
+        await expect(page.getByRole('table', { name: 'Compatibility clusters' })).toBeVisible();
+        await page
+          .getByRole('columnheader', { name: 'Nodes', exact: true })
+          .getByRole('button', { name: 'Sort by Nodes', exact: true })
+          .click();
+        await expect(
+          page.getByRole('table', { name: 'Compatibility clusters' }).getByRole('row').nth(1)
+        ).toContainText('small');
         await expect(page.getByRole('heading', { name: 'Total clusters' })).toBeVisible();
         await page.getByRole('button', { name: '23', exact: true }).click();
         await expect(page.getByLabel('Last action')).toHaveText('view clusters');
@@ -187,7 +197,7 @@ try {
         await page.getByRole('button', { name: 'Cancel', exact: true }).click();
         await expect(page.getByLabel('Last action')).toHaveText('cancel wizard');
         assert.deepEqual(errors, [], `React ${reactVersion} / ${format} browser errors`);
-        console.log(`PASS React ${reactVersion} / ${format}: dashboard and wizard`);
+        console.log(`PASS React ${reactVersion} / ${format}: dashboard, wizard and cluster table`);
       } catch (error) {
         throw new AggregateError(
           [error, ...errors.map((message) => new Error(message))],

@@ -33,7 +33,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "npm run build -w @redhat-cloud-services/nxtcm-dashboard && npm run build -w @redhat-cloud-services/nxtcm-rosa-hcp-wizard",
+    "build": "npm run build -w @redhat-cloud-services/nxtcm-dashboard && npm run build -w @redhat-cloud-services/nxtcm-rosa-hcp-wizard && npm run build -w @redhat-cloud-services/nxtcm-cluster-table",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "eslint 'packages/**/*.{ts,tsx}' '.storybook/**/*.ts' 'playwright/**/*.{ts,tsx}' 'playwright*.config.ts' vite.e2e.config.ts 'scripts/react-compatibility/*.tsx'",
@@ -131,6 +131,7 @@
   "private": true,
   "workspaces": [
     "packages/nxtcm-rosa-hcp-wizard",
-    "packages/nxtcm-dashboard"
+    "packages/nxtcm-dashboard",
+    "packages/nxtcm-cluster-table"
   ]
 }

@@ -388,7 +388,7 @@ See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the complete work
 
 ## Publishing packages
 
-`@redhat-cloud-services/nxtcm-dashboard` and `@redhat-cloud-services/nxtcm-rosa-hcp-wizard` are published to npm via [`.github/workflows/publish-package.yml`](.github/workflows/publish-package.yml) when a **GitHub Release is published** targeting `main`.
+`@redhat-cloud-services/nxtcm-dashboard`, `@redhat-cloud-services/nxtcm-rosa-hcp-wizard`, and [`@redhat-cloud-services/nxtcm-cluster-table`](packages/nxtcm-cluster-table/README.md) are published to npm via [`.github/workflows/publish-package.yml`](.github/workflows/publish-package.yml) when a **GitHub Release is published** targeting `main`.
 
 ### Release tag format
 
@@ -396,6 +396,7 @@ The release tag must match the package version in that workspace's `package.json
 
 | Package | Tag pattern | Example (`6.0.0`) |
 |---------|-------------|---------------------|
+| Cluster Table | `nxtcm-cluster-table-v{version}` | `nxtcm-cluster-table-v6.0.0` |
 | Dashboard | `nxtcm-dashboard-v{version}` | `nxtcm-dashboard-v6.0.0` |
 | ROSA HCP Wizard | `nxtcm-rosa-hcp-wizard-v{version}` | `nxtcm-rosa-hcp-wizard-v6.0.0` |
 

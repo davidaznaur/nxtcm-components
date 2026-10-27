@@ -171,6 +171,7 @@ jobs:
         with:
           name: dist
           path: |
+            packages/nxtcm-cluster-table/dist/
             packages/nxtcm-dashboard/dist/
             packages/nxtcm-rosa-hcp-wizard/dist/
           retention-days: 7

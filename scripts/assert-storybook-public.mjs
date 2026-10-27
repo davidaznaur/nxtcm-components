@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const REQUIRED_PUBLIC_TITLES = [
+  'Components/ClusterTable/ClusterTable',
   'Components/Dashboard/AdvisorCategories',
   'Components/Dashboard/AdvisorSeverity',
   'Components/Dashboard/CVECard',

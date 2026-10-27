@@ -8,6 +8,7 @@ npm workspaces monorepo of shared react component libraries for Red Hat ACM (Adv
 
 workspace packages:
 
+- `@redhat-cloud-services/nxtcm-cluster-table` (`packages/nxtcm-cluster-table`) — generic cluster table and engine
 - `@redhat-cloud-services/nxtcm-dashboard` (`packages/nxtcm-dashboard`) — workspace package
 - `@redhat-cloud-services/nxtcm-rosa-hcp-wizard` (`packages/nxtcm-rosa-hcp-wizard`) — workspace package
 
@@ -38,6 +39,7 @@ docs/agent-rules/         # task-type rulebooks
 
 ## where to add code
 
+- cluster table work: `packages/nxtcm-cluster-table/src/` (see its package overlay)
 - dashboard widget work: `packages/nxtcm-dashboard/src/`
 - rosa hcp wizard work: `packages/nxtcm-rosa-hcp-wizard/src/`
 
