@@ -3,7 +3,6 @@ import type { Page } from '@playwright/test';
 import { expect, type MountResult, test } from '@/playwright/ct-fixture';
 
 import type {
-  RosaHcpWizardBodyErrorThenBackMount,
   RosaHcpWizardBodyErrorTransitionMount,
   RosaHcpWizardBodyMount,
   RosaHcpWizardBodyPendingSubmissionMount,
@@ -66,6 +65,7 @@ test.describe('ROSAHCPWizardBody', () => {
       );
       const wizardView = component.getByTestId('rosa-hcp-wizard-view');
       await expect(wizardView).toBeAttached();
+      const wizardElement = await wizardView.elementHandle();
       const reviewStep = component.getByRole('button', { name: wizard.stepLabels.review });
       await reviewStep.click();
 
@@ -78,7 +78,9 @@ test.describe('ROSAHCPWizardBody', () => {
         loadingView.getByRole('heading', { name: createCluster.inProgressTitle })
       ).toBeVisible();
       await expect(loadingView.getByRole('progressbar')).toBeVisible();
-      await expect(wizardView).not.toBeAttached();
+      await expect(wizardView).toBeAttached();
+      expect(await wizardElement?.evaluate((element) => element.isConnected)).toBe(true);
+      await expect(component.getByRole('navigation', { name: /Wizard steps/i })).toHaveCount(0);
       await expect(component.getByRole('button', { name: wizard.createCluster })).toHaveCount(0);
       await expect(component.getByTestId('submitted-yaml')).not.toHaveValue('');
       await checkAccessibility({ component });
@@ -109,7 +111,7 @@ test.describe('ROSAHCPWizardBody', () => {
       await expect(loadingView).toBeVisible();
       await expect(loadingView).toBeFocused();
       await expect(loadingView.getByRole('progressbar')).toBeVisible();
-      await expect(wizardView).not.toBeAttached();
+      await expect(wizardView).toBeAttached();
       await expect(yamlView).toHaveCount(0);
       await expect(component.getByTestId('submitted-yaml')).not.toHaveValue('');
 
@@ -124,18 +126,123 @@ test.describe('ROSAHCPWizardBody', () => {
       await expect(yamlView).toBeFocused();
       await expect(yamlView.locator('.monaco-editor')).toBeVisible();
     });
+
+    test('hides the mobile navigation toggle during loading and error recovery', async ({
+      mount,
+      page,
+    }) => {
+      await page.setViewportSize({ width: 320, height: 800 });
+      const component = await mount<typeof RosaHcpWizardBodyPendingSubmissionMount>(
+        'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyPendingSubmissionMount'
+      );
+      const toggle = component.getByRole('button', { name: 'Wizard toggle' });
+      await toggle.click();
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: wizard.createCluster }).click();
+
+      await expect(
+        component.getByRole('status', { name: createCluster.inProgressTitle })
+      ).toBeFocused();
+      await expect(toggle).toHaveCount(0);
+      await component.getByRole('button', { name: 'Finish submission with error' }).click();
+      await expect(component.getByRole('region', { name: submitErrorStrings.title })).toBeFocused();
+      await expect(toggle).toHaveCount(0);
+
+      await component.getByRole('button', { name: submitErrorStrings.backToReviewStep }).click();
+      await expect(toggle).toBeVisible();
+    });
+
+    const failureCases: { label: string; finish: (component: MountResult) => Promise<void> }[] = [
+      {
+        label: 'a resolved submission reporting an error',
+        finish: async (component) => {
+          await component.getByRole('button', { name: 'Finish submission with error' }).click();
+          await expect(
+            component.getByRole('region', { name: submitErrorStrings.title })
+          ).toBeFocused();
+          await component
+            .getByRole('button', { name: submitErrorStrings.backToReviewStep })
+            .click();
+        },
+      },
+      {
+        label: 'a rejected submission reporting an error',
+        finish: async (component) => {
+          await component.getByRole('button', { name: 'Reject submission with error' }).click();
+          await expect(
+            component.getByRole('region', { name: submitErrorStrings.title })
+          ).toBeFocused();
+          await component
+            .getByRole('button', { name: submitErrorStrings.backToReviewStep })
+            .click();
+        },
+      },
+      {
+        label: 'a rejection without a host error',
+        finish: async (component) => {
+          await component.getByRole('button', { name: 'Reject submission without error' }).click();
+        },
+      },
+    ];
+
+    for (const { label, finish } of failureCases) {
+      test(`retains the exact submitted YAML after ${label}`, async ({ mount, page }) => {
+        const component = await mount<typeof RosaHcpWizardBodyPendingSubmissionMount>(
+          'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyPendingSubmissionMount'
+        );
+        await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+        await component.getByRole('button', { name: /Edit in YAML/i }).click();
+        const yamlView = component.getByRole('region', { name: /YAML Configuration/i });
+        await expect(yamlView.locator('.monaco-editor')).toBeVisible();
+
+        const draft = 'kind: ROSAControlPlane\nmetadata:\n  name: submitted-draft';
+        await page.evaluate((yaml) => {
+          const browserWindow = window as Window & {
+            monacoEditor?: { setValue: (value: string) => void };
+            originalMonacoEditor?: unknown;
+          };
+          if (!browserWindow.monacoEditor) throw new Error('Monaco editor is not ready');
+          browserWindow.originalMonacoEditor = browserWindow.monacoEditor;
+          browserWindow.monacoEditor.setValue(yaml);
+        }, draft);
+
+        await component.getByRole('button', { name: wizard.createCluster }).click();
+        await expect(
+          component.getByRole('status', { name: createCluster.inProgressTitle })
+        ).toBeFocused();
+        await expect(component.getByTestId('submitted-yaml')).toHaveValue(draft);
+        await finish(component);
+
+        await expect(yamlView).toBeFocused();
+        await expect
+          .poll(() =>
+            page.evaluate(() => {
+              const browserWindow = window as Window & {
+                monacoEditor?: { getValue: () => string };
+                originalMonacoEditor?: unknown;
+              };
+              if (browserWindow.monacoEditor === browserWindow.originalMonacoEditor)
+                return undefined;
+              return browserWindow.monacoEditor?.getValue();
+            })
+          )
+          .toBe(draft);
+      });
+    }
   });
 
   test.describe('submit error state', () => {
-    test('moves focus into the error and restores the current wizard step on return', async ({
+    test('moves focus into the error and preserves form values on return', async ({
       mount,
       page,
     }) => {
       const component = await mount<typeof RosaHcpWizardBodyErrorTransitionMount>(
-        'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyErrorTransitionMount'
+        'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyErrorTransitionMount',
+        { enableAllWizardNavSteps: true }
       );
       const clusterName = component.getByRole('textbox', { name: /Cluster name/i });
       await clusterName.fill('saved-cluster');
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
       await component.getByRole('button', { name: 'Simulate submission error' }).click();
 
       const errorView = component.getByRole('region', { name: submitErrorStrings.title });
@@ -151,9 +258,15 @@ test.describe('ROSAHCPWizardBody', () => {
       await checkAccessibility({ component });
 
       await component.getByRole('button', { name: submitErrorStrings.backToReviewStep }).click();
-      await expect(
-        component.getByRole('button', { name: wizard.stepLabels.details })
-      ).toBeFocused();
+      await expect(component.getByRole('button', { name: /Edit in YAML/i })).toBeFocused();
+      await component
+        .getByRole('navigation', { name: /Wizard steps/i })
+        .getByRole('button', { name: wizard.stepLabels.basicSetup })
+        .click();
+      await component
+        .getByRole('navigation', { name: /Wizard steps/i })
+        .getByRole('button', { name: wizard.stepLabels.details })
+        .click();
       await expect(clusterName).toHaveValue('saved-cluster');
       await checkAccessibility({ component });
     });
@@ -199,8 +312,10 @@ test.describe('ROSAHCPWizardBody', () => {
     test('shows error EmptyState and hides wizard when onSubmitError is set', async ({ mount }) => {
       const component = await mount<typeof RosaHcpWizardBodyMount>(
         'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyMount',
-        { onSubmitError: ERROR_MESSAGE }
+        { onSubmitError: ERROR_MESSAGE, deferSubmitError: true, enableAllWizardNavSteps: true }
       );
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: 'Simulate submission error' }).click();
 
       await expect(
         component.getByRole('heading', { name: submitErrorStrings.title })
@@ -215,8 +330,15 @@ test.describe('ROSAHCPWizardBody', () => {
     test('shows Back to the wizard when onBackToReviewStep is provided', async ({ mount }) => {
       const component = await mount<typeof RosaHcpWizardBodyMount>(
         'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyMount',
-        { onSubmitError: ERROR_MESSAGE, onBackToReviewStep: true }
+        {
+          onSubmitError: ERROR_MESSAGE,
+          onBackToReviewStep: true,
+          deferSubmitError: true,
+          enableAllWizardNavSteps: true,
+        }
       );
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: 'Simulate submission error' }).click();
 
       await expect(
         component.getByRole('button', { name: submitErrorStrings.backToReviewStep })
@@ -229,9 +351,13 @@ test.describe('ROSAHCPWizardBody', () => {
         {
           onSubmitError: ERROR_MESSAGE,
           onCancel: true,
+          deferSubmitError: true,
+          enableAllWizardNavSteps: true,
         }
       );
 
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: 'Simulate submission error' }).click();
       await component.getByRole('button', { name: submitErrorStrings.exitWizard }).click();
       await expect
         .poll(() =>
@@ -248,9 +374,13 @@ test.describe('ROSAHCPWizardBody', () => {
         {
           onSubmitError: ERROR_MESSAGE,
           onBackToReviewStep: true,
+          deferSubmitError: true,
+          enableAllWizardNavSteps: true,
         }
       );
 
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: 'Simulate submission error' }).click();
       await component.getByRole('button', { name: submitErrorStrings.backToReviewStep }).click();
       await expect
         .poll(() =>
@@ -264,9 +394,12 @@ test.describe('ROSAHCPWizardBody', () => {
     test('hides error view and shows wizard when Back to the wizard clears the error', async ({
       mount,
     }) => {
-      const component = await mount<typeof RosaHcpWizardBodyErrorThenBackMount>(
-        'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyErrorThenBackMount'
+      const component = await mount<typeof RosaHcpWizardBodyErrorTransitionMount>(
+        'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyErrorTransitionMount',
+        { enableAllWizardNavSteps: true }
       );
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: 'Simulate submission error' }).click();
 
       await expect(
         component.getByRole('heading', { name: submitErrorStrings.title })
@@ -274,21 +407,28 @@ test.describe('ROSAHCPWizardBody', () => {
       await component.getByRole('button', { name: submitErrorStrings.backToReviewStep }).click();
 
       await expect(component.getByRole('heading', { name: submitErrorStrings.title })).toBeHidden();
-      await expect(component.getByRole('textbox', { name: /Cluster name/i })).toBeVisible();
+      await expect(component.getByRole('button', { name: /Edit in YAML/i })).toBeVisible();
     });
 
     test('passes accessibility tests when showing the error state', async ({ mount }) => {
       test.setTimeout(60_000);
       const component = await mount<typeof RosaHcpWizardBodyMount>(
         'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyMount',
-        { onSubmitError: ERROR_MESSAGE, onBackToReviewStep: true }
+        {
+          onSubmitError: ERROR_MESSAGE,
+          onBackToReviewStep: true,
+          deferSubmitError: true,
+          enableAllWizardNavSteps: true,
+        }
       );
 
+      await component.getByRole('button', { name: wizard.stepLabels.review }).click();
+      await component.getByRole('button', { name: 'Simulate submission error' }).click();
       await checkAccessibility({ component });
     });
   });
 
-  test('returns focus to Review after a successful YAML submission', async ({ mount }) => {
+  test('retains YAML when a resolved submission does not navigate away', async ({ mount }) => {
     const component = await mount<typeof RosaHcpWizardBodyYamlApplyMount>(
       'nxtcm-rosa-hcp-wizard/ROSAHCPWizardBody/RosaHcpWizardBodyYamlApplyMount',
       { enableAllWizardNavSteps: true }
@@ -300,9 +440,8 @@ test.describe('ROSAHCPWizardBody', () => {
 
     await component.getByRole('button', { name: wizard.createCluster }).press('Enter');
 
-    await expect(component.getByRole('button', { name: /Edit in YAML/i })).toBeFocused();
-    await expect(component.getByRole('navigation', { name: /Wizard steps/i })).toBeVisible();
-    await expect(component.locator('.monaco-editor')).toBeHidden();
+    await expect(component.getByRole('region', { name: /YAML Configuration/i })).toBeFocused();
+    await expect(component.locator('.monaco-editor')).toBeVisible();
   });
 
   test('keeps the YAML editor open when a resolved submission reports an error', async ({

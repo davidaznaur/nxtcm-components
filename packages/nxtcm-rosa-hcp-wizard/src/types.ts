@@ -260,6 +260,7 @@ export type RosaHCPWizardProps = {
    * including any advanced fields the user added that are not mapped by the form).
    */
   onSubmit: (yamlString: string) => Promise<void>;
+  /** Set only for a submission from the Review step or its YAML editor. */
   onSubmitError?: string | boolean;
   onCancel: () => void;
   title?: string;

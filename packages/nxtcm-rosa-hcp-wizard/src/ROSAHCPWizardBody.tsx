@@ -43,6 +43,8 @@ const RosaHcpYamlEditorStep = lazy(() =>
   }))
 );
 
+type FinalStepView = 'review' | 'yaml' | 'submitting' | 'error';
+
 export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
   const {
     wizardData,
@@ -58,18 +60,12 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
 
   const { getValues } = useFormContext<Partial<ROSAHCPCluster>>();
   const [isNavigatingToReview, setIsNavigatingToReview] = useState(false);
-  // Preserve the YAML submission origin while the loading and error views replace the wizard.
-  const [yamlEditorView, setYamlEditorView] = useState<'closed' | 'open' | 'submitted'>('closed');
+  const [isYamlEditorOpen, setIsYamlEditorOpen] = useState(false);
   const [yamlDraft, setYamlDraft] = useState<string | undefined>(undefined);
-  const isYamlEditorOpen = yamlEditorView === 'open';
-  const [wizardStartIndex, setWizardStartIndex] = useState(1);
-  // The first wizard step is the Basic setup parent; Details is its first focusable substep.
-  const lastWizardStepIndexRef = useRef(2);
   const yamlEditorRef = useRef<YamlEditorHandle>(null);
   const wizardViewRef = useRef<HTMLDivElement>(null);
-  const submittingViewRef = useRef<HTMLElement>(null);
-  const errorViewRef = useRef<HTMLElement>(null);
   const yamlViewRef = useRef<HTMLDivElement>(null);
+  const replacementViewRef = useRef<HTMLElement>(null);
   const editYamlButtonRef = useRef<HTMLButtonElement>(null);
   const submitErrorTitleId = useId();
   const submitErrorMessageId = useId();
@@ -86,60 +82,46 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
     setYamlDraft(yaml);
     return yaml;
   }, [getFormYaml, isYamlEditorOpen]);
-  const handleSubmitResolved = useCallback((): void => {
-    setWizardStartIndex(lastWizardStepIndexRef.current);
-    if (isYamlEditorOpen) setYamlEditorView('submitted');
-  }, [isYamlEditorOpen]);
   const { isSubmitting, submitWizard } = useRosaHcpWizardSubmit({
     onSubmit,
     getYaml: getSubmissionYaml,
     skipFormValidation: isYamlEditorOpen,
-    onSubmitResolved: handleSubmitResolved,
   });
-  const submitReview = useCallback((): Promise<boolean> => {
-    setYamlDraft(undefined);
-    setYamlEditorView('closed');
-    return submitWizard();
-  }, [submitWizard]);
 
   const handleBackToReviewStep = useCallback(async () => {
     if (!onBackToReviewStep) return;
-    setWizardStartIndex(lastWizardStepIndexRef.current);
-    if (yamlEditorView === 'submitted') setYamlEditorView('open');
     setIsNavigatingToReview(true);
     try {
       await onBackToReviewStep();
     } finally {
       setIsNavigatingToReview(false);
     }
-  }, [onBackToReviewStep, yamlEditorView]);
+  }, [onBackToReviewStep]);
 
   const handleCloseYamlEditor = useCallback(() => {
     setYamlDraft(undefined);
-    setYamlEditorView('closed');
+    setIsYamlEditorOpen(false);
   }, []);
   const openYamlEditor = useCallback(() => {
     setYamlDraft(undefined);
-    setYamlEditorView('open');
+    setIsYamlEditorOpen(true);
   }, []);
 
   const handleWizardStepChange = useCallback<
     NonNullable<React.ComponentProps<typeof Wizard>['onStepChange']>
   >(
     (_event, newStep) => {
-      if (newStep?.index) {
-        lastWizardStepIndexRef.current = newStep.index;
-      }
       if (isYamlEditorOpen && newStep?.id !== STEP_IDS.REVIEW) {
-        setYamlEditorView('closed');
+        setYamlDraft(undefined);
+        setIsYamlEditorOpen(false);
       }
     },
     [isYamlEditorOpen]
   );
 
   const footer = useMemo(
-    () => createRosaHcpWizardFooter(isSubmitting, submitReview, enableAllWizardNavSteps),
-    [enableAllWizardNavSteps, isSubmitting, submitReview]
+    () => createRosaHcpWizardFooter(isSubmitting, submitWizard, enableAllWizardNavSteps),
+    [enableAllWizardNavSteps, isSubmitting, submitWizard]
   );
 
   useWizardFieldMetaChangeEffects(wizardData);
@@ -154,23 +136,25 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
   const rosaStrings = useRosaHcpWizardStrings();
   const { wizard, yamlEditor: yamlStrings } = rosaStrings;
   const sl = wizard.stepLabels;
-  const view = isSubmitting
+  const finalStepView: FinalStepView = isSubmitting
     ? 'submitting'
     : onSubmitError
       ? 'error'
       : isYamlEditorOpen
         ? 'yaml'
-        : 'wizard';
-  const previousViewRef = useRef(view);
+        : 'review';
+  const previousFinalStepViewRef = useRef<FinalStepView>(finalStepView);
+  const focusReplacementView = useCallback((node: HTMLElement | null): void => {
+    replacementViewRef.current = node;
+    node?.focus();
+  }, []);
 
   useLayoutEffect(() => {
-    if (view === 'submitting') {
-      submittingViewRef.current?.focus();
-    } else if (view === 'error') {
-      errorViewRef.current?.focus();
-    } else if (view === 'yaml') {
+    if (finalStepView === 'submitting' || finalStepView === 'error') {
+      replacementViewRef.current?.focus();
+    } else if (finalStepView === 'yaml') {
       yamlViewRef.current?.focus();
-    } else if (previousViewRef.current !== 'wizard') {
+    } else if (finalStepView === 'review' && previousFinalStepViewRef.current !== 'review') {
       const focusTimer = window.setTimeout(() => {
         if (editYamlButtonRef.current) {
           editYamlButtonRef.current.focus();
@@ -180,11 +164,11 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
             ?.focus();
         }
       }, 0);
-      previousViewRef.current = view;
+      previousFinalStepViewRef.current = finalStepView;
       return () => window.clearTimeout(focusTimer);
     }
-    previousViewRef.current = view;
-  }, [view]);
+    previousFinalStepViewRef.current = finalStepView;
+  }, [finalStepView]);
 
   const yamlEditorFooter = useMemo(
     () => (
@@ -200,55 +184,19 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
     [handleCloseYamlEditor, isSubmitting, onCancel, submitWizard]
   );
 
-  if (isSubmitting) {
-    return (
-      <section
-        ref={submittingViewRef}
-        tabIndex={-1}
-        role="status"
-        aria-labelledby={createClusterTitleId}
-        aria-label={wizard.createCluster}
-      >
-        <RosaWizardSubmittingState createClusterTitleId={createClusterTitleId} />
-      </section>
-    );
-  }
-
-  if (onSubmitError) {
-    return (
-      <section
-        ref={errorViewRef}
-        tabIndex={-1}
-        aria-labelledby={submitErrorTitleId}
-        aria-describedby={
-          typeof onSubmitError === 'string' && onSubmitError.length > 0
-            ? submitErrorMessageId
-            : undefined
-        }
-      >
-        <RosaWizardSubmitError
-          titleId={submitErrorTitleId}
-          messageId={submitErrorMessageId}
-          onSubmitError={onSubmitError}
-          onBackToReviewStep={onBackToReviewStep ? handleBackToReviewStep : undefined}
-          isNavigatingToReview={isNavigatingToReview}
-          onCancel={onCancel}
-        />
-      </section>
-    );
-  }
+  const isFinishedView = finalStepView === 'submitting' || finalStepView === 'error';
 
   return (
     <div
       ref={wizardViewRef}
-      data-testid="rosa-hcp-wizard-view"
-      className={`rosa-hcp-wizard${isYamlEditorOpen ? ' rosa-hcp-wizard--yaml-editor-open' : ''}`}
+      className={`rosa-hcp-wizard${finalStepView === 'yaml' ? ' rosa-hcp-wizard--yaml-editor-open' : ''}`}
     >
       <Wizard
+        data-testid="rosa-hcp-wizard-view"
+        className={isFinishedView ? 'pf-m-finished' : undefined}
         footer={footer}
         onClose={onCancel}
         onStepChange={handleWizardStepChange}
-        startIndex={wizardStartIndex}
         isVisitRequired={!enableAllWizardNavSteps}
       >
         <WizardStep
@@ -321,12 +269,42 @@ export const ROSAHCPWizardBody = (props: RosaHCPWizardProps) => {
           key={STEP_IDS.REVIEW}
           footer={isYamlEditorOpen ? yamlEditorFooter : undefined}
           body={
-            isYamlEditorOpen
+            finalStepView === 'yaml'
               ? { className: 'rosa-hcp-yaml-editor-wizard-main', hasNoPadding: true }
               : undefined
           }
         >
-          {isYamlEditorOpen ? (
+          {finalStepView === 'submitting' ? (
+            <section
+              ref={focusReplacementView}
+              tabIndex={-1}
+              role="status"
+              aria-labelledby={createClusterTitleId}
+              aria-label={wizard.createCluster}
+            >
+              <RosaWizardSubmittingState createClusterTitleId={createClusterTitleId} />
+            </section>
+          ) : finalStepView === 'error' ? (
+            <section
+              ref={focusReplacementView}
+              tabIndex={-1}
+              aria-labelledby={submitErrorTitleId}
+              aria-describedby={
+                typeof onSubmitError === 'string' && onSubmitError.length > 0
+                  ? submitErrorMessageId
+                  : undefined
+              }
+            >
+              <RosaWizardSubmitError
+                titleId={submitErrorTitleId}
+                messageId={submitErrorMessageId}
+                onSubmitError={onSubmitError ?? false}
+                onBackToReviewStep={onBackToReviewStep ? handleBackToReviewStep : undefined}
+                isNavigatingToReview={isNavigatingToReview}
+                onCancel={onCancel}
+              />
+            </section>
+          ) : finalStepView === 'yaml' ? (
             <div
               ref={yamlViewRef}
               className="rosa-hcp-yaml-editor-view"
