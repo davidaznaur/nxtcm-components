@@ -81,19 +81,9 @@ function RosaHcpWizardBodyMountComponent(props: RosaHcpWizardBodyMountProps = {}
   );
 }
 
-/** Starts in submit error state and clears error when "Back to the wizard" is clicked. */
+/** Lets tests report a Review submission error and clear it with Back. */
 export function RosaHcpWizardBodyErrorThenBackMount(props: RosaHcpWizardBodyMountProps = {}) {
-  const [submitError, setSubmitError] = React.useState<string | boolean>(
-    'There has been an error creating the cluster'
-  );
-
-  return (
-    <RosaHcpWizardBodyMountComponent
-      {...props}
-      onSubmitError={submitError}
-      onBackToReviewStep={() => setSubmitError(false)}
-    />
-  );
+  return <RosaHcpWizardBodyErrorTransitionMount {...props} />;
 }
 
 /** Lets tests enter the submission-error view after the wizard has rendered. */
@@ -154,7 +144,10 @@ export function RosaHcpWizardBodyYamlApplyErrorMount(props: RosaHcpWizardBodyMou
 export function RosaHcpWizardBodyPendingSubmissionMount(): React.ReactElement {
   const [submitError, setSubmitError] = React.useState<string | boolean>(false);
   const [submittedYaml, setSubmittedYaml] = React.useState('');
-  const resolveSubmissionRef = React.useRef<(() => void) | null>(null);
+  const submissionRef = React.useRef<{
+    resolve: () => void;
+    reject: () => void;
+  } | null>(null);
   const resolver = React.useMemo(
     () => createClusterValidationResolver(defaultRosaHcpWizardValidatorStrings),
     []
@@ -171,14 +164,15 @@ export function RosaHcpWizardBodyPendingSubmissionMount(): React.ReactElement {
   });
   const onSubmit = React.useCallback((yaml: string): Promise<void> => {
     setSubmittedYaml(yaml);
-    return new Promise<void>((resolve) => {
-      resolveSubmissionRef.current = resolve;
+    return new Promise<void>((resolve, reject) => {
+      submissionRef.current = { resolve, reject: () => reject(new Error('Submission failed')) };
     });
   }, []);
-  const finishSubmission = (error: boolean): void => {
+  const finishSubmission = (error: boolean, reject = false): void => {
     if (error) setSubmitError('There has been an error creating the cluster');
-    resolveSubmissionRef.current?.();
-    resolveSubmissionRef.current = null;
+    if (reject) submissionRef.current?.reject();
+    else submissionRef.current?.resolve();
+    submissionRef.current = null;
   };
 
   return (
@@ -219,7 +213,13 @@ export function RosaHcpWizardBodyPendingSubmissionMount(): React.ReactElement {
       <button type="button" onClick={() => finishSubmission(true)} disabled={!submittedYaml}>
         Finish submission with error
       </button>
-      <input data-testid="submitted-yaml" readOnly hidden value={submittedYaml} />
+      <button type="button" onClick={() => finishSubmission(true, true)} disabled={!submittedYaml}>
+        Reject submission with error
+      </button>
+      <button type="button" onClick={() => finishSubmission(false, true)} disabled={!submittedYaml}>
+        Reject submission without error
+      </button>
+      <textarea data-testid="submitted-yaml" readOnly hidden value={submittedYaml} />
     </>
   );
 }
@@ -232,6 +232,8 @@ export type RosaHcpWizardBodyMountGalleryProps = Omit<
 > & {
   onCancel?: boolean;
   onBackToReviewStep?: boolean;
+  /** Allow the test to report the configured error after reaching Review. */
+  deferSubmitError?: boolean;
 };
 
 export function RosaHcpWizardBodyMount(
@@ -243,9 +245,11 @@ export function RosaHcpWizardBodyMount(
   const [onBackToReviewStepCalls, setOnBackToReviewStepCalls] = React.useState<
     Parameters<NonNullable<BrowserProps['onBackToReviewStep']>>[]
   >([]);
+  const [errorTriggered, setErrorTriggered] = React.useState(false);
   const browserProps = React.useMemo<BrowserProps>(
     () => ({
       ...props,
+      onSubmitError: props.deferSubmitError && !errorTriggered ? false : props.onSubmitError,
       onCancel: props.onCancel
         ? () => {
             setOnCancelCalls((calls) => [...calls, []]);
@@ -257,10 +261,15 @@ export function RosaHcpWizardBodyMount(
           }
         : undefined,
     }),
-    [props]
+    [errorTriggered, props]
   );
   return (
     <>
+      {props.deferSubmitError && (
+        <button type="button" onClick={() => setErrorTriggered(true)}>
+          Simulate submission error
+        </button>
+      )}
       <RosaHcpWizardBodyMountComponent {...browserProps} />
       <div hidden>
         <input data-testid="onCancel-calls" readOnly value={JSON.stringify(onCancelCalls)} />

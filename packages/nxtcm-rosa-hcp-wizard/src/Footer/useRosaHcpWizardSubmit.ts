@@ -16,8 +16,6 @@ type UseRosaHcpWizardSubmitOptions = {
   onSubmit: (yamlString: string) => Promise<void>;
   getYaml: () => string;
   skipFormValidation?: boolean;
-  /** Runs on a resolved submission before the loading state clears. */
-  onSubmitResolved?: () => void;
 };
 
 type UseRosaHcpWizardSubmitResult = {
@@ -30,7 +28,6 @@ export function useRosaHcpWizardSubmit({
   onSubmit,
   getYaml,
   skipFormValidation = false,
-  onSubmitResolved,
 }: UseRosaHcpWizardSubmitOptions): UseRosaHcpWizardSubmitResult {
   const reviewSections = useRosaHcpWizardReviewSections();
   const {
@@ -114,7 +111,6 @@ export function useRosaHcpWizardSubmit({
       setIsSubmitting(true);
       try {
         await onSubmit(getYaml());
-        onSubmitResolved?.();
         return true;
       } finally {
         setIsSubmitting(false);
@@ -122,7 +118,7 @@ export function useRosaHcpWizardSubmit({
     } finally {
       inFlightRef.current = false;
     }
-  }, [getYaml, onSubmit, onSubmitResolved, skipFormValidation, validateEntireForm]);
+  }, [getYaml, onSubmit, skipFormValidation, validateEntireForm]);
 
   const showValidationAlert = validationAlertStepId === STEP_IDS.REVIEW;
 

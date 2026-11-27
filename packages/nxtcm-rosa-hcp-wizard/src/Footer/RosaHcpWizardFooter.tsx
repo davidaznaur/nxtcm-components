@@ -54,7 +54,7 @@ function RosaHcpWizardFooter({
   submitWizard,
   enableAllWizardNavSteps = false,
 }: RosaHcpWizardFooterProps) {
-  const { getStep, goToStepByIndex, mainWrapperRef, shouldFocusContent } = useWizardContext();
+  const { goToStepById, mainWrapperRef, shouldFocusContent } = useWizardContext();
   const [invalidFocusRequest, setInvalidFocusRequest] = useState(0);
   const reviewSections = useRosaHcpWizardReviewSections();
   const { wizard } = useRosaHcpWizardStrings();
@@ -237,14 +237,14 @@ function RosaHcpWizardFooter({
   const handleSkipToReview = useCallback(() => {
     void (async () => {
       if (await validateActiveStep()) {
-        goToStepByIndex(getStep(STEP_IDS.REVIEW).index);
+        goToStepById(STEP_IDS.REVIEW);
         // Unlike onNext/onBack, goToStepById does not move focus, and this button is gone on Review.
         if (shouldFocusContent) {
           setTimeout(() => mainWrapperRef.current?.focus(), 0);
         }
       }
     })();
-  }, [goToStepByIndex, getStep, mainWrapperRef, shouldFocusContent, validateActiveStep]);
+  }, [goToStepById, mainWrapperRef, shouldFocusContent, validateActiveStep]);
 
   return (
     <WizardFooterWrapper>
